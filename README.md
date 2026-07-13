@@ -6,7 +6,7 @@ A friendly, anime-inspired landing page for an AI comic-animation studio. It is 
 
 - Responsive, polished landing page
 - Drag-and-drop or file-picker comic upload interaction
-- Animated processing state after a file is selected
+- Animated three-step processing state and clear completion feedback after a file is selected
 - Product sections explaining the creator workflow and benefits
 
 ## Run it locally
@@ -29,3 +29,5 @@ Then visit `http://localhost:4173`.
 ## GitHub learning path
 
 We will use this repository like a real project: make small changes, create a branch when useful, commit with a clear message, push it to GitHub, then open a pull request for review.
+
+This local repository is not connected to GitHub yet. Once you create an empty GitHub repository, we will add it as the remote, publish this project, and use pull requests for future improvements.
