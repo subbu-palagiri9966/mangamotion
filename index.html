@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="MangaMotion turns your comics into animated stories." />
+    <title>MangaMotion — Your comic, brought to life</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="MangaMotion home"><span class="brand-mark">✦</span>MangaMotion</a>
+      <nav><a href="#how-it-works">How it works</a><a href="#features">Features</a><a href="#gallery">Examples</a></nav>
+      <button class="login" type="button">Log in</button>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow"><span></span> AI animation studio for comic creators</p>
+          <h1>Your story deserves <em>motion.</em></h1>
+          <p class="hero-text">Upload your comic and turn it into a beautiful, voiced animated scene — while you stay in creative control.</p>
+          <div class="hero-actions"><button class="primary" id="startButton" type="button">Bring my comic to life <span>→</span></button><a class="watch-link" href="#how-it-works"><span class="play">▶</span> See how it works</a></div>
+          <div class="creator-proof"><div class="avatars"><span>✦</span><span>◉</span><span>☾</span></div><p>Made for <strong>independent creators</strong><br />and their original worlds.</p></div>
+        </div>
+        <div class="scene-wrap" aria-label="Animated comic scene preview">
+          <div class="spark s1">✦</div><div class="spark s2">✦</div><div class="spark s3">·</div>
+          <div class="scene-card">
+            <div class="scene-top"><span class="live-dot"></span> SCENE PREVIEW <span>00:18</span></div>
+            <div class="sun"></div><div class="cloud c1"></div><div class="cloud c2"></div>
+            <div class="mountain m1"></div><div class="mountain m2"></div><div class="hill"></div>
+            <div class="character"><div class="hair"></div><div class="face"><i></i><i></i></div><div class="body"></div></div>
+            <div class="speech">We can do this!<small>AI voice · hopeful</small></div>
+            <div class="timeline"><div class="track"><b></b></div><span>◀</span><span class="pause">Ⅱ</span><span>▶</span></div>
+          </div>
+          <div class="mini-card"><span class="mini-icon">✧</span><div><b>Emotion detected</b><small>Hopeful · determined</small></div></div>
+        </div>
+      </section>
+
+      <section class="upload-section" id="upload">
+        <div class="section-heading"><p class="eyebrow"><span></span> Start your first scene</p><h2>From panels to a living story.</h2><p>Drop in your original comic page. We’ll help you transform it, one scene at a time.</p></div>
+        <div class="upload-card" id="dropZone">
+          <input id="fileInput" type="file" accept="image/*,.pdf" hidden />
+          <div class="upload-icon">↑</div><h3>Drop your comic page here</h3><p>PNG, JPG, or PDF · up to 25 MB</p><button class="secondary" id="browseButton" type="button">Choose a file</button>
+        </div>
+        <div class="processing hidden" id="processing"><div class="loader-orbit"><i></i></div><div><b>Reading your story…</b><p id="loadingText">Finding comic panels and dialogue</p></div></div>
+      </section>
+
+      <section class="steps" id="how-it-works">
+        <div class="section-heading"><p class="eyebrow"><span></span> Your creative process</p><h2>Simple for you. Magical for your readers.</h2></div>
+        <div class="step-grid"><article><span class="number">01</span><div class="step-icon">▧</div><h3>Upload your comic</h3><p>Start with an original page, chapter, or storyboard.</p></article><article><span class="number">02</span><div class="step-icon">✦</div><h3>Shape the scene</h3><p>Choose voices, mood, timing, and the movement you imagine.</p></article><article><span class="number">03</span><div class="step-icon">▶</div><h3>Watch it come alive</h3><p>Preview, fine-tune, then share your animated story.</p></article></div>
+      </section>
+
+      <section class="feature-section" id="features"><div class="feature-visual"><div class="panel panel-one"><span>Panel 01</span><b>“Don’t leave me behind.”</b></div><div class="panel panel-two"><span>Panel 02</span><b>Voice · Emotion · Motion</b></div><div class="connection">✦</div></div><div><p class="eyebrow"><span></span> Made to support your vision</p><h2>You direct.<br />AI helps animate.</h2><p class="feature-copy">MangaMotion takes care of the time-consuming parts, but every important creative choice stays with you.</p><ul><li><span>✓</span> Original, customisable AI voices</li><li><span>✓</span> Scene-by-scene creative controls</li><li><span>✓</span> Character consistency across your story</li></ul></div></section>
+
+      <section class="gallery" id="gallery"><div class="section-heading"><p class="eyebrow"><span></span> Made for every kind of story</p><h2>Your world. Your style.</h2></div><div class="gallery-grid"><div class="gallery-card card-purple"><span>Fantasy adventure</span><b>Moonlit quests</b></div><div class="gallery-card card-orange"><span>Slice of life</span><b>Small, bright moments</b></div><div class="gallery-card card-blue"><span>Sci-fi</span><b>Beyond the stars</b></div></div></section>
+    </main>
+    <footer><a class="brand" href="#top"><span class="brand-mark">✦</span>MangaMotion</a><p>For the stories only you can tell.</p><span>© 2026 MangaMotion</span></footer>
+    <script src="app.js"></script>
+  </body>
+</html>
