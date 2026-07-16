@@ -47,6 +47,11 @@
           <input id="fileInput" type="file" accept="image/*,.pdf" hidden />
           <div class="upload-icon">↑</div><h3>Drop your comic page here</h3><p>PNG, JPG, or PDF · up to 25 MB</p><button class="secondary" id="browseButton" type="button">Choose a file</button>
         </div>
+        <section class="file-preview hidden" id="filePreview" aria-live="polite">
+          <div class="preview-heading"><div><p class="eyebrow"><span></span> Your source material</p><h3 id="previewTitle">Comic preview</h3></div><span class="preview-badge" id="previewKind">Preview</span></div>
+          <div class="preview-surface"><img id="imagePreview" class="hidden" alt="Selected comic preview" /><iframe id="pdfPreview" class="hidden" title="Selected comic PDF preview"></iframe></div>
+          <p class="preview-note" id="previewMeta">Previewing locally — your file stays on this device.</p>
+        </section>
         <div class="processing hidden" id="processing" aria-live="polite">
           <div class="loader-orbit"><i></i></div>
           <div class="processing-copy"><div class="processing-title"><b>Reading your story…</b><span id="progressNumber">1 / 3</span></div><p id="loadingText">Finding comic panels and dialogue</p><div class="progress-line"><i id="progressBar"></i></div></div>

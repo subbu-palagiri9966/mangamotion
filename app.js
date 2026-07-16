@@ -9,17 +9,56 @@ const progressBar = document.querySelector('#progressBar');
 const readyCard = document.querySelector('#readyCard');
 const readyText = document.querySelector('#readyText');
 const tryAgainButton = document.querySelector('#tryAgainButton');
+const filePreview = document.querySelector('#filePreview');
+const imagePreview = document.querySelector('#imagePreview');
+const pdfPreview = document.querySelector('#pdfPreview');
+const previewTitle = document.querySelector('#previewTitle');
+const previewKind = document.querySelector('#previewKind');
+const previewMeta = document.querySelector('#previewMeta');
 
 let uploadTimers = [];
+let previewUrl = '';
 
 function clearUploadTimers() {
   uploadTimers.forEach(window.clearTimeout);
   uploadTimers = [];
 }
 
+function formatFileSize(bytes) {
+  return bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function clearPreview() {
+  if (previewUrl) URL.revokeObjectURL(previewUrl);
+  previewUrl = '';
+  imagePreview.removeAttribute('src');
+  pdfPreview.removeAttribute('src');
+  imagePreview.classList.add('hidden');
+  pdfPreview.classList.add('hidden');
+  filePreview.classList.add('hidden');
+}
+
+function showPreview(file) {
+  clearPreview();
+  previewUrl = URL.createObjectURL(file);
+  const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+  previewTitle.textContent = file.name;
+  previewKind.textContent = isPdf ? 'PDF preview' : 'Image preview';
+  previewMeta.textContent = `${formatFileSize(file.size)} · Previewing locally — your file stays on this device.`;
+  if (isPdf) {
+    pdfPreview.src = `${previewUrl}#page=1&view=FitH`;
+    pdfPreview.classList.remove('hidden');
+  } else {
+    imagePreview.src = previewUrl;
+    imagePreview.classList.remove('hidden');
+  }
+  filePreview.classList.remove('hidden');
+}
+
 function beginUpload(file) {
   if (!file) return;
   clearUploadTimers();
+  showPreview(file);
   readyCard.classList.add('hidden');
   processing.classList.remove('hidden');
   progressNumber.textContent = '1 / 3';
@@ -51,6 +90,7 @@ startButton.addEventListener('click', () => document.querySelector('#upload').sc
 dropZone.addEventListener('drop', e => beginUpload(e.dataTransfer.files[0]));
 tryAgainButton.addEventListener('click', () => {
   fileInput.value = '';
+  clearPreview();
   readyCard.classList.add('hidden');
   fileInput.click();
 });
