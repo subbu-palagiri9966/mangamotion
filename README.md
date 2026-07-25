@@ -7,6 +7,7 @@ A friendly, anime-inspired landing page for an AI comic-animation studio. It is 
 - Responsive, polished landing page
 - Drag-and-drop or file-picker comic upload interaction
 - Local image or PDF preview before processing (the selected file stays on the device)
+- Demo Scene Plan screen with example panel sequencing, dialogue direction, and character notes
 - Animated three-step processing state and clear completion feedback after a file is selected
 - Product sections explaining the creator workflow and benefits
 

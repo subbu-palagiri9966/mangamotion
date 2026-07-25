@@ -56,7 +56,16 @@
           <div class="loader-orbit"><i></i></div>
           <div class="processing-copy"><div class="processing-title"><b>Reading your story…</b><span id="progressNumber">1 / 3</span></div><p id="loadingText">Finding comic panels and dialogue</p><div class="progress-line"><i id="progressBar"></i></div></div>
         </div>
-        <div class="ready-card hidden" id="readyCard" aria-live="polite"><span class="ready-icon">✦</span><div><b>Your scene plan is ready</b><p id="readyText">We found the first moments worth animating.</p></div><button class="text-button" id="tryAgainButton" type="button">Try another</button></div>
+        <div class="ready-card hidden" id="readyCard" aria-live="polite"><span class="ready-icon">✦</span><div><b>Your scene plan is ready</b><p id="readyText">We found the first moments worth animating.</p></div><button class="text-button" id="openPlanButton" type="button">Open plan</button><button class="text-button" id="tryAgainButton" type="button">Try another</button></div>
+        <section class="scene-plan hidden" id="scenePlan" aria-live="polite">
+          <div class="plan-top"><div><p class="eyebrow"><span></span> Demo scene plan</p><h2>Your first story beat.</h2><p id="planSource">Built from your selected comic file.</p></div><span class="demo-badge">Demo analysis</span></div>
+          <div class="plan-grid">
+            <article class="story-card scene-summary"><span class="card-label">Scene 01 · 00:00–00:12</span><h3>The opening moment</h3><p>A character enters a quiet space, pauses to take in the setting, and the scene builds anticipation for what comes next.</p><div class="tag-row"><span>Reflective</span><span>Gentle pace</span><span>Wide shot</span></div></article>
+            <article class="story-card"><span class="card-label">Characters</span><div class="character-row"><span class="character-orb">A</span><div><b>Lead character</b><p>Thoughtful · observant</p></div></div><div class="character-row"><span class="character-orb alt">B</span><div><b>Supporting voice</b><p>Warm · reassuring</p></div></div></article>
+            <article class="story-card dialogue-card"><span class="card-label">Dialogue direction</span><p class="quote">“Use the dialogue from the original panel here.”</p><p>When OCR is connected, MangaMotion will place extracted dialogue and suggested voice direction here.</p></article>
+          </div>
+          <div class="panel-strip"><div class="panel-strip-head"><div><span class="card-label">Suggested panel sequence</span><h3>Choose the moments to animate</h3></div><button class="secondary" type="button" disabled>Editing next</button></div><div class="panel-options"><article><span>01</span><b>Establishing shot</b><small>2.5 sec · slow push-in</small></article><article><span>02</span><b>Character reaction</b><small>3 sec · gentle motion</small></article><article><span>03</span><b>Dialogue beat</b><small>4 sec · voice cue</small></article></div></div>
+        </section>
       </section>
 
       <section class="steps" id="how-it-works">

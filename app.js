@@ -15,6 +15,9 @@ const pdfPreview = document.querySelector('#pdfPreview');
 const previewTitle = document.querySelector('#previewTitle');
 const previewKind = document.querySelector('#previewKind');
 const previewMeta = document.querySelector('#previewMeta');
+const scenePlan = document.querySelector('#scenePlan');
+const planSource = document.querySelector('#planSource');
+const openPlanButton = document.querySelector('#openPlanButton');
 
 let uploadTimers = [];
 let previewUrl = '';
@@ -36,6 +39,7 @@ function clearPreview() {
   imagePreview.classList.add('hidden');
   pdfPreview.classList.add('hidden');
   filePreview.classList.add('hidden');
+  scenePlan.classList.add('hidden');
 }
 
 function showPreview(file) {
@@ -59,6 +63,7 @@ function beginUpload(file) {
   if (!file) return;
   clearUploadTimers();
   showPreview(file);
+  planSource.textContent = `Demo scene direction for ${file.name}.`;
   readyCard.classList.add('hidden');
   processing.classList.remove('hidden');
   progressNumber.textContent = '1 / 3';
@@ -79,6 +84,7 @@ function beginUpload(file) {
     processing.classList.add('hidden');
     readyText.textContent = `${file.name} is ready for scene direction.`;
     readyCard.classList.remove('hidden');
+    scenePlan.classList.remove('hidden');
   }, 4300));
 }
 
@@ -94,3 +100,4 @@ tryAgainButton.addEventListener('click', () => {
   readyCard.classList.add('hidden');
   fileInput.click();
 });
+openPlanButton.addEventListener('click', () => scenePlan.scrollIntoView({ behavior: 'smooth', block: 'start' }));
