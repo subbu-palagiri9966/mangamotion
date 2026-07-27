@@ -60,11 +60,24 @@
         <section class="scene-plan hidden" id="scenePlan" aria-live="polite">
           <div class="plan-top"><div><p class="eyebrow"><span></span> Demo scene plan</p><h2>Your first story beat.</h2><p id="planSource">Built from your selected comic file.</p></div><span class="demo-badge">Demo analysis</span></div>
           <div class="plan-grid">
-            <article class="story-card scene-summary"><span class="card-label">Scene 01 · 00:00–00:12</span><h3>The opening moment</h3><p>A character enters a quiet space, pauses to take in the setting, and the scene builds anticipation for what comes next.</p><div class="tag-row"><span>Reflective</span><span>Gentle pace</span><span>Wide shot</span></div></article>
+            <article class="story-card scene-summary"><span class="card-label" id="sceneTiming">Scene 01 · 00:00–00:12</span><h3 id="sceneTitle">The opening moment</h3><p id="sceneDescription">A character enters a quiet space, pauses to take in the setting, and the scene builds anticipation for what comes next.</p><div class="tag-row" id="sceneTags"><span>Reflective</span><span>Gentle pace</span><span>Wide shot</span></div></article>
             <article class="story-card"><span class="card-label">Characters</span><div class="character-row"><span class="character-orb">A</span><div><b>Lead character</b><p>Thoughtful · observant</p></div></div><div class="character-row"><span class="character-orb alt">B</span><div><b>Supporting voice</b><p>Warm · reassuring</p></div></div></article>
             <article class="story-card dialogue-card"><span class="card-label">Dialogue direction</span><p class="quote">“Use the dialogue from the original panel here.”</p><p>When OCR is connected, MangaMotion will place extracted dialogue and suggested voice direction here.</p></article>
           </div>
-          <div class="panel-strip"><div class="panel-strip-head"><div><span class="card-label">Suggested panel sequence</span><h3>Choose the moments to animate</h3></div><button class="secondary" type="button" disabled>Editing next</button></div><div class="panel-options"><article><span>01</span><b>Establishing shot</b><small>2.5 sec · slow push-in</small></article><article><span>02</span><b>Character reaction</b><small>3 sec · gentle motion</small></article><article><span>03</span><b>Dialogue beat</b><small>4 sec · voice cue</small></article></div></div>
+          <div class="panel-strip"><div class="panel-strip-head"><div><span class="card-label">Suggested panel sequence</span><h3>Choose the moments to animate</h3></div><button class="secondary" id="openEditorButton" type="button">Edit scene</button></div><div class="panel-options"><article><span>01</span><b>Establishing shot</b><small>2.5 sec · slow push-in</small></article><article><span>02</span><b>Character reaction</b><small>3 sec · gentle motion</small></article><article><span>03</span><b>Dialogue beat</b><small>4 sec · voice cue</small></article></div></div>
+          <form class="scene-editor hidden" id="sceneEditor">
+            <div class="editor-heading"><div><span class="card-label">Scene editor</span><h3>Make this first beat yours.</h3><p>These controls update the demo plan only. No file or text is sent anywhere.</p></div><button class="text-button" id="closeEditorButton" type="button">Close</button></div>
+            <div class="editor-grid">
+              <label class="editor-field">Scene title<input id="editorTitle" type="text" maxlength="70" value="The opening moment" /></label>
+              <label class="editor-field editor-field-wide">Scene direction<textarea id="editorDescription" rows="3" maxlength="240">A character enters a quiet space, pauses to take in the setting, and the scene builds anticipation for what comes next.</textarea></label>
+              <label class="editor-field">Mood<select id="editorMood"><option>Reflective</option><option>Hopeful</option><option>Energetic</option><option>Tense</option></select></label>
+              <label class="editor-field">Camera<select id="editorCamera"><option>Wide shot</option><option>Slow push-in</option><option>Close-up</option><option>Tracking shot</option></select></label>
+              <label class="editor-field">Voice direction<select id="editorVoice"><option>Warm &amp; reassuring</option><option>Bright &amp; energetic</option><option>Calm narration</option><option>Quiet and intimate</option></select></label>
+              <label class="editor-field">Length (seconds)<input id="editorDuration" type="number" min="1" max="60" value="12" /></label>
+            </div>
+            <fieldset class="panel-picker"><legend>Focus panel</legend><div class="panel-choice-row"><button class="panel-choice" type="button" data-panel="Establishing shot" aria-pressed="true">01 <span>Establishing shot</span></button><button class="panel-choice" type="button" data-panel="Character reaction" aria-pressed="false">02 <span>Character reaction</span></button><button class="panel-choice" type="button" data-panel="Dialogue beat" aria-pressed="false">03 <span>Dialogue beat</span></button></div></fieldset>
+            <div class="editor-actions"><p id="draftStatus" aria-live="polite">Changes are saved only when you choose Save scene draft.</p><button class="primary" type="submit">Save scene draft</button></div>
+          </form>
         </section>
       </section>
 

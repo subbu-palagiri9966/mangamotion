@@ -8,6 +8,7 @@ A friendly, anime-inspired landing page for an AI comic-animation studio. It is 
 - Drag-and-drop or file-picker comic upload interaction
 - Local image or PDF preview before processing (the selected file stays on the device)
 - Demo Scene Plan screen with example panel sequencing, dialogue direction, and character notes
+- Local scene editor for title, direction, mood, camera, voice, timing, and panel focus (saved only in the current browser)
 - Animated three-step processing state and clear completion feedback after a file is selected
 - Product sections explaining the creator workflow and benefits
 
@@ -23,13 +24,12 @@ Then visit `http://localhost:4173`.
 
 ## Next milestones
 
-1. Save the uploaded file and show its preview.
-2. Connect a backend for panel detection and OCR.
-3. Build the scene editor and animation preview.
-4. Add user accounts and project history.
+1. Connect a backend for panel detection and OCR.
+2. Build an animation preview from the edited scene.
+3. Add user accounts and project history.
 
 ## GitHub learning path
 
 We will use this repository like a real project: make small changes, create a branch when useful, commit with a clear message, push it to GitHub, then open a pull request for review.
 
-This local repository is not connected to GitHub yet. Once you create an empty GitHub repository, we will add it as the remote, publish this project, and use pull requests for future improvements.
+This local repository is connected to GitHub. We use feature branches and pull requests for future improvements.
