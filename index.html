@@ -82,9 +82,15 @@
               <label class="editor-field">Length (seconds)<input id="editorDuration" type="number" min="1" max="60" value="12" /></label>
             </div>
             <fieldset class="panel-picker"><legend>Focus panel</legend><div class="panel-choice-row"><button class="panel-choice" type="button" data-panel="Establishing shot" aria-pressed="true">01 <span>Establishing shot</span></button><button class="panel-choice" type="button" data-panel="Character reaction" aria-pressed="false">02 <span>Character reaction</span></button><button class="panel-choice" type="button" data-panel="Dialogue beat" aria-pressed="false">03 <span>Dialogue beat</span></button></div></fieldset>
-            <div class="editor-actions"><p id="draftStatus" aria-live="polite">Changes are saved only when you choose Save scene draft.</p><button class="primary" type="submit">Save scene draft</button></div>
+            <div class="editor-actions"><p id="draftStatus" aria-live="polite">Changes are saved only when you choose Save scene draft.</p><div class="editor-button-row"><button class="secondary" id="saveProjectButton" type="button">Save to library</button><button class="primary" type="submit">Save scene draft</button></div></div>
           </form>
         </section>
+      </section>
+
+      <section class="project-library" id="projectLibrary">
+        <div class="library-heading"><div><p class="eyebrow"><span></span> Your project shelf</p><h2>Keep your best story beats close.</h2><p>Saved scene settings stay only in this browser. Your uploaded image or PDF is never copied into the library.</p></div><span class="library-count" id="libraryCount">0 projects</span></div>
+        <div class="project-grid" id="projectGrid"></div>
+        <div class="library-empty" id="libraryEmpty"><span>✦</span><div><b>No saved projects yet</b><p>Edit a scene, then choose “Save to library” to keep its title, direction, and creative settings.</p></div></div>
       </section>
 
       <section class="steps" id="how-it-works">
