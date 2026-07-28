@@ -33,10 +33,27 @@ const editorVoice = document.querySelector('#editorVoice');
 const editorDuration = document.querySelector('#editorDuration');
 const draftStatus = document.querySelector('#draftStatus');
 const panelChoices = document.querySelectorAll('.panel-choice');
+const openPreviewButton = document.querySelector('#openPreviewButton');
+const closePreviewButton = document.querySelector('#closePreviewButton');
+const animationPlayer = document.querySelector('#animationPlayer');
+const playerStage = document.querySelector('#playerStage');
+const animationImage = document.querySelector('#animationImage');
+const storyboardPoster = document.querySelector('#storyboardPoster');
+const playerTitle = document.querySelector('#playerTitle');
+const playerDetails = document.querySelector('#playerDetails');
+const posterPanel = document.querySelector('#posterPanel');
+const playerMood = document.querySelector('#playerMood');
+const playerTime = document.querySelector('#playerTime');
+const playPreviewButton = document.querySelector('#playPreviewButton');
+const restartPreviewButton = document.querySelector('#restartPreviewButton');
+const previewProgress = document.querySelector('#previewProgress');
 
 let uploadTimers = [];
 let previewUrl = '';
 let selectedPanel = 'Establishing shot';
+let selectedFileIsPdf = false;
+let previewFrame = 0;
+let previewStartedAt = 0;
 const sceneDraftKey = 'mangamotion-scene-draft';
 
 function setTags(tags) {
@@ -77,6 +94,49 @@ function applySceneDraft(draft) {
   sceneTiming.textContent = `Scene 01 · 00:00–00:${String(draft.duration).padStart(2, '0')}`;
   setTags([draft.mood, draft.camera, `${draft.duration} sec`, draft.panel]);
   updatePanelChoices();
+  updatePlayerCopy(draft);
+}
+
+function currentSceneDuration() {
+  return Math.min(60, Math.max(1, Number(editorDuration.value) || 12));
+}
+
+function updatePlayerCopy(draft = readSceneDraft()) {
+  playerTitle.textContent = draft.title || 'Your scene in motion';
+  playerDetails.textContent = `${draft.panel} · ${draft.camera} · ${draft.voice}`;
+  posterPanel.textContent = draft.panel;
+  playerMood.textContent = draft.mood;
+  playerTime.textContent = `00:00 / 00:${String(draft.duration).padStart(2, '0')}`;
+  playerStage.dataset.camera = draft.camera.toLowerCase().replaceAll(' ', '-');
+}
+
+function stopPreview() {
+  window.cancelAnimationFrame(previewFrame);
+  playerStage.classList.remove('is-playing');
+  playPreviewButton.textContent = 'Play preview';
+}
+
+function restartPreview() {
+  stopPreview();
+  previewProgress.style.width = '0%';
+  playerTime.textContent = `00:00 / 00:${String(currentSceneDuration()).padStart(2, '0')}`;
+}
+
+function playPreview() {
+  stopPreview();
+  const duration = Math.min(currentSceneDuration() * 400, 8000);
+  previewStartedAt = performance.now();
+  playerStage.classList.add('is-playing');
+  playPreviewButton.textContent = 'Playing…';
+  const tick = now => {
+    const progress = Math.min((now - previewStartedAt) / duration, 1);
+    previewProgress.style.width = `${progress * 100}%`;
+    const seconds = Math.round(progress * currentSceneDuration());
+    playerTime.textContent = `00:${String(seconds).padStart(2, '0')} / 00:${String(currentSceneDuration()).padStart(2, '0')}`;
+    if (progress < 1) previewFrame = window.requestAnimationFrame(tick);
+    else stopPreview();
+  };
+  previewFrame = window.requestAnimationFrame(tick);
 }
 
 function restoreSceneDraft() {
@@ -110,12 +170,15 @@ function clearPreview() {
   filePreview.classList.add('hidden');
   scenePlan.classList.add('hidden');
   sceneEditor.classList.add('hidden');
+  animationPlayer.classList.add('hidden');
+  restartPreview();
 }
 
 function showPreview(file) {
   clearPreview();
   previewUrl = URL.createObjectURL(file);
   const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+  selectedFileIsPdf = isPdf;
   previewTitle.textContent = file.name;
   previewKind.textContent = isPdf ? 'PDF preview' : 'Image preview';
   previewMeta.textContent = `${formatFileSize(file.size)} · Previewing locally — your file stays on this device.`;
@@ -193,4 +256,20 @@ sceneEditor.addEventListener('submit', event => {
     draftStatus.textContent = 'The scene was updated, but this browser could not save the draft.';
   }
 });
+openPreviewButton.addEventListener('click', () => {
+  const draft = readSceneDraft();
+  updatePlayerCopy(draft);
+  animationImage.classList.toggle('hidden', selectedFileIsPdf || !previewUrl);
+  storyboardPoster.classList.toggle('hidden', !selectedFileIsPdf && Boolean(previewUrl));
+  if (!selectedFileIsPdf && previewUrl) animationImage.src = previewUrl;
+  animationPlayer.classList.remove('hidden');
+  restartPreview();
+  animationPlayer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+});
+closePreviewButton.addEventListener('click', () => {
+  stopPreview();
+  animationPlayer.classList.add('hidden');
+});
+playPreviewButton.addEventListener('click', playPreview);
+restartPreviewButton.addEventListener('click', restartPreview);
 restoreSceneDraft();
