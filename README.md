@@ -10,6 +10,7 @@ A friendly, anime-inspired landing page for an AI comic-animation studio. It is 
 - Demo Scene Plan screen with example panel sequencing, dialogue direction, and character notes
 - Local scene editor for title, direction, mood, camera, voice, timing, and panel focus (saved only in the current browser)
 - Browser-only animation preview with simple camera-style motion for the selected scene
+- Local project library for saving, reopening, and deleting scene-setting snapshots
 - Animated three-step processing state and clear completion feedback after a file is selected
 - Product sections explaining the creator workflow and benefits
 
@@ -26,7 +27,7 @@ Then visit `http://localhost:4173`.
 ## Next milestones
 
 1. Connect a backend for panel detection and OCR.
-2. Add user accounts and project history.
+2. Add user accounts and cloud-based project history.
 
 ## GitHub learning path
 

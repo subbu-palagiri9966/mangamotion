@@ -47,6 +47,10 @@ const playerTime = document.querySelector('#playerTime');
 const playPreviewButton = document.querySelector('#playPreviewButton');
 const restartPreviewButton = document.querySelector('#restartPreviewButton');
 const previewProgress = document.querySelector('#previewProgress');
+const saveProjectButton = document.querySelector('#saveProjectButton');
+const projectGrid = document.querySelector('#projectGrid');
+const libraryEmpty = document.querySelector('#libraryEmpty');
+const libraryCount = document.querySelector('#libraryCount');
 
 let uploadTimers = [];
 let previewUrl = '';
@@ -55,6 +59,67 @@ let selectedFileIsPdf = false;
 let previewFrame = 0;
 let previewStartedAt = 0;
 const sceneDraftKey = 'mangamotion-scene-draft';
+const projectLibraryKey = 'mangamotion-project-library';
+
+function getProjects() {
+  try {
+    const projects = JSON.parse(localStorage.getItem(projectLibraryKey));
+    return Array.isArray(projects) ? projects : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveProjects(projects) {
+  localStorage.setItem(projectLibraryKey, JSON.stringify(projects));
+}
+
+function formatSavedDate(timestamp) {
+  return new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' }).format(new Date(timestamp));
+}
+
+function renderProjectLibrary() {
+  const projects = getProjects();
+  projectGrid.replaceChildren();
+  libraryCount.textContent = `${projects.length} ${projects.length === 1 ? 'project' : 'projects'}`;
+  libraryEmpty.classList.toggle('hidden', projects.length > 0);
+  projects.forEach(project => {
+    const card = document.createElement('article');
+    card.className = 'project-card';
+    const label = document.createElement('span');
+    label.className = 'project-date';
+    label.textContent = `Saved ${formatSavedDate(project.savedAt)}`;
+    const title = document.createElement('h3');
+    title.textContent = project.title;
+    const details = document.createElement('p');
+    details.textContent = `${project.mood} · ${project.camera} · ${project.duration} sec`;
+    const actions = document.createElement('div');
+    actions.className = 'project-actions';
+    const openButton = document.createElement('button');
+    openButton.className = 'text-button';
+    openButton.type = 'button';
+    openButton.textContent = 'Open scene';
+    openButton.addEventListener('click', () => {
+      applySceneDraft(project);
+      planSource.textContent = 'Loaded from your local project library. Upload a file again whenever you want to preview source material.';
+      scenePlan.classList.remove('hidden');
+      sceneEditor.classList.remove('hidden');
+      scenePlan.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      draftStatus.textContent = 'Scene loaded from your local project library.';
+    });
+    const deleteButton = document.createElement('button');
+    deleteButton.className = 'text-button danger-button';
+    deleteButton.type = 'button';
+    deleteButton.textContent = 'Delete';
+    deleteButton.addEventListener('click', () => {
+      saveProjects(getProjects().filter(savedProject => savedProject.id !== project.id));
+      renderProjectLibrary();
+    });
+    actions.append(openButton, deleteButton);
+    card.append(label, title, details, actions);
+    projectGrid.append(card);
+  });
+}
 
 function setTags(tags) {
   sceneTags.replaceChildren();
@@ -256,6 +321,18 @@ sceneEditor.addEventListener('submit', event => {
     draftStatus.textContent = 'The scene was updated, but this browser could not save the draft.';
   }
 });
+saveProjectButton.addEventListener('click', () => {
+  const draft = readSceneDraft();
+  const project = { ...draft, id: `${Date.now()}-${Math.random().toString(16).slice(2)}`, savedAt: Date.now() };
+  try {
+    saveProjects([project, ...getProjects()]);
+    renderProjectLibrary();
+    draftStatus.textContent = 'Scene saved to your local project library.';
+    document.querySelector('#projectLibrary').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  } catch {
+    draftStatus.textContent = 'This browser could not save the project library.';
+  }
+});
 openPreviewButton.addEventListener('click', () => {
   const draft = readSceneDraft();
   updatePlayerCopy(draft);
@@ -273,3 +350,4 @@ closePreviewButton.addEventListener('click', () => {
 playPreviewButton.addEventListener('click', playPreview);
 restartPreviewButton.addEventListener('click', restartPreview);
 restoreSceneDraft();
+renderProjectLibrary();
