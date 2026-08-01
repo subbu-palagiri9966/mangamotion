@@ -8,7 +8,7 @@ A friendly, anime-inspired landing page for an AI comic-animation studio. It is 
 - Drag-and-drop or file-picker comic upload interaction
 - Local image or PDF preview before processing (the selected file stays on the device)
 - Demo Scene Plan screen with example panel sequencing, dialogue direction, and character notes
-- Local scene editor for title, direction, mood, camera, voice, timing, and panel focus (saved only in the current browser)
+- Local scene editor for title, direction, mood, camera, voice, timing, panel focus, and manual dialogue (saved only in the current browser)
 - Browser-only animation preview with simple camera-style motion for the selected scene
 - Local project library for saving, reopening, and deleting scene-setting snapshots
 - Animated three-step processing state and clear completion feedback after a file is selected

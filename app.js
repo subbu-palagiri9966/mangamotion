@@ -31,6 +31,11 @@ const editorMood = document.querySelector('#editorMood');
 const editorCamera = document.querySelector('#editorCamera');
 const editorVoice = document.querySelector('#editorVoice');
 const editorDuration = document.querySelector('#editorDuration');
+const editorSpeaker = document.querySelector('#editorSpeaker');
+const editorDelivery = document.querySelector('#editorDelivery');
+const editorDialogue = document.querySelector('#editorDialogue');
+const dialogueQuote = document.querySelector('#dialogueQuote');
+const dialogueMeta = document.querySelector('#dialogueMeta');
 const draftStatus = document.querySelector('#draftStatus');
 const panelChoices = document.querySelectorAll('.panel-choice');
 const openPreviewButton = document.querySelector('#openPreviewButton');
@@ -142,24 +147,37 @@ function readSceneDraft() {
     camera: editorCamera.value,
     voice: editorVoice.value,
     duration: Math.min(60, Math.max(1, Number(editorDuration.value) || 12)),
-    panel: selectedPanel
+    panel: selectedPanel,
+    speaker: editorSpeaker.value.trim() || 'Lead character',
+    delivery: editorDelivery.value,
+    dialogue: editorDialogue.value.trim()
   };
 }
 
+function formatDialogue(dialogue) {
+  return dialogue ? `“${dialogue.replace(/^“|”$/g, '')}”` : '“Add the dialogue from your original panel here.”';
+}
+
 function applySceneDraft(draft) {
-  editorTitle.value = draft.title;
-  editorDescription.value = draft.description;
-  editorMood.value = draft.mood;
-  editorCamera.value = draft.camera;
-  editorVoice.value = draft.voice;
-  editorDuration.value = draft.duration;
-  selectedPanel = draft.panel;
-  sceneTitle.textContent = draft.title;
-  sceneDescription.textContent = draft.description;
-  sceneTiming.textContent = `Scene 01 · 00:00–00:${String(draft.duration).padStart(2, '0')}`;
-  setTags([draft.mood, draft.camera, `${draft.duration} sec`, draft.panel]);
+  editorTitle.value = draft.title || 'Untitled scene';
+  editorDescription.value = draft.description || 'Add direction for this scene.';
+  editorMood.value = draft.mood || 'Reflective';
+  editorCamera.value = draft.camera || 'Wide shot';
+  editorVoice.value = draft.voice || 'Warm & reassuring';
+  editorDuration.value = draft.duration || 12;
+  editorSpeaker.value = draft.speaker || 'Lead character';
+  editorDelivery.value = draft.delivery || 'Natural';
+  editorDialogue.value = draft.dialogue || '';
+  selectedPanel = draft.panel || 'Establishing shot';
+  const appliedDraft = readSceneDraft();
+  sceneTitle.textContent = appliedDraft.title;
+  sceneDescription.textContent = appliedDraft.description;
+  sceneTiming.textContent = `Scene 01 · 00:00–00:${String(appliedDraft.duration).padStart(2, '0')}`;
+  setTags([appliedDraft.mood, appliedDraft.camera, `${appliedDraft.duration} sec`, appliedDraft.panel]);
+  dialogueQuote.textContent = formatDialogue(appliedDraft.dialogue);
+  dialogueMeta.textContent = appliedDraft.dialogue ? `${appliedDraft.speaker} · ${appliedDraft.delivery}` : 'Write a line manually in the scene editor. OCR suggestions can be added later.';
   updatePanelChoices();
-  updatePlayerCopy(draft);
+  updatePlayerCopy(appliedDraft);
 }
 
 function currentSceneDuration() {
@@ -168,7 +186,7 @@ function currentSceneDuration() {
 
 function updatePlayerCopy(draft = readSceneDraft()) {
   playerTitle.textContent = draft.title || 'Your scene in motion';
-  playerDetails.textContent = `${draft.panel} · ${draft.camera} · ${draft.voice}`;
+  playerDetails.textContent = `${draft.panel} · ${draft.camera} · ${draft.voice}${draft.dialogue ? ` · ${draft.speaker}` : ''}`;
   posterPanel.textContent = draft.panel;
   playerMood.textContent = draft.mood;
   playerTime.textContent = `00:00 / 00:${String(draft.duration).padStart(2, '0')}`;
