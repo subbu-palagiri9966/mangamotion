@@ -7,6 +7,7 @@ A friendly, anime-inspired landing page for an AI comic-animation studio. It is 
 - Responsive, polished landing page
 - Drag-and-drop or file-picker comic upload interaction
 - Local image or PDF preview before processing (the selected file stays on the device)
+- Free browser-based text extraction: uploaded images are enlarged and contrast-adjusted locally; scanned PDFs are rendered one page at a time and read locally. Detected text is placed in the dialogue editor for review.
 - Demo Scene Plan screen with example panel sequencing, dialogue direction, and character notes
 - Local scene editor for title, direction, mood, camera, voice, timing, panel focus, and manual dialogue (saved only in the current browser)
 - Browser-only animation preview with simple camera-style motion for the selected scene
@@ -16,7 +17,7 @@ A friendly, anime-inspired landing page for an AI comic-animation studio. It is 
 
 ## Run it locally
 
-This is a simple static website. Open `index.html` in a browser, or run a local server from this folder:
+This is a simple static website. For the image text reader, run a local server from this folder:
 
 ```bash
 python3 -m http.server 4173
@@ -26,8 +27,9 @@ Then visit `http://localhost:4173`.
 
 ## Next milestones
 
-1. Connect a backend for panel detection and OCR.
-2. Add user accounts and cloud-based project history.
+1. Add panel detection to select the most relevant speech bubbles.
+2. Connect a video-generation backend for per-panel animation.
+3. Add user accounts and cloud-based project history.
 
 ## GitHub learning path
 

@@ -51,6 +51,11 @@
           <div class="preview-heading"><div><p class="eyebrow"><span></span> Your source material</p><h3 id="previewTitle">Comic preview</h3></div><span class="preview-badge" id="previewKind">Preview</span></div>
           <div class="preview-surface"><img id="imagePreview" class="hidden" alt="Selected comic preview" /><iframe id="pdfPreview" class="hidden" title="Selected comic PDF preview"></iframe></div>
           <p class="preview-note" id="previewMeta">Previewing locally — your file stays on this device.</p>
+          <div class="ocr-card hidden" id="ocrCard" aria-live="polite">
+            <div class="ocr-copy"><b id="ocrTitle">Read dialogue from this image</b><p id="ocrStatus">Use free browser-based OCR to find text. You can review it before saving.</p></div>
+            <label class="pdf-page-picker hidden" id="pdfPagePicker">Comic page to read <input id="pdfPageNumber" type="number" min="1" value="4" inputmode="numeric" /><small id="pdfPageHint">Choose a comic page, not the cover or credits.</small></label>
+            <button class="secondary" id="ocrButton" type="button">Extract text</button>
+          </div>
         </section>
         <div class="processing hidden" id="processing" aria-live="polite">
           <div class="loader-orbit"><i></i></div>
@@ -62,7 +67,7 @@
           <div class="plan-grid">
             <article class="story-card scene-summary"><span class="card-label" id="sceneTiming">Scene 01 · 00:00–00:12</span><h3 id="sceneTitle">The opening moment</h3><p id="sceneDescription">A character enters a quiet space, pauses to take in the setting, and the scene builds anticipation for what comes next.</p><div class="tag-row" id="sceneTags"><span>Reflective</span><span>Gentle pace</span><span>Wide shot</span></div></article>
             <article class="story-card"><span class="card-label">Characters</span><div class="character-row"><span class="character-orb">A</span><div><b>Lead character</b><p>Thoughtful · observant</p></div></div><div class="character-row"><span class="character-orb alt">B</span><div><b>Supporting voice</b><p>Warm · reassuring</p></div></div></article>
-            <article class="story-card dialogue-card"><span class="card-label">Dialogue direction</span><p class="quote" id="dialogueQuote">“Add the dialogue from your original panel here.”</p><p id="dialogueMeta">Write a line manually in the scene editor. OCR suggestions can be added later.</p></article>
+            <article class="story-card dialogue-card"><span class="card-label">Dialogue direction</span><p class="quote" id="dialogueQuote">“Add the dialogue from your original panel here.”</p><p id="dialogueMeta">Use the image text reader or write a line manually in the scene editor.</p></article>
           </div>
           <div class="panel-strip"><div class="panel-strip-head"><div><span class="card-label">Suggested panel sequence</span><h3>Choose the moments to animate</h3></div><div class="plan-actions"><button class="secondary" id="openEditorButton" type="button">Edit scene</button><button class="primary preview-button" id="openPreviewButton" type="button">Preview scene</button></div></div><div class="panel-options"><article><span>01</span><b>Establishing shot</b><small>2.5 sec · slow push-in</small></article><article><span>02</span><b>Character reaction</b><small>3 sec · gentle motion</small></article><article><span>03</span><b>Dialogue beat</b><small>4 sec · voice cue</small></article></div></div>
           <section class="animation-player hidden" id="animationPlayer" aria-live="polite">
@@ -81,7 +86,7 @@
               <label class="editor-field">Voice direction<select id="editorVoice"><option>Warm &amp; reassuring</option><option>Bright &amp; energetic</option><option>Calm narration</option><option>Quiet and intimate</option></select></label>
               <label class="editor-field">Length (seconds)<input id="editorDuration" type="number" min="1" max="60" value="12" /></label>
             </div>
-            <fieldset class="dialogue-editor"><legend>Dialogue editor</legend><div class="editor-grid"><label class="editor-field">Speaker<input id="editorSpeaker" type="text" maxlength="40" value="Lead character" /></label><label class="editor-field">Delivery<select id="editorDelivery"><option>Natural</option><option>Warm &amp; reassuring</option><option>Bright &amp; energetic</option><option>Quiet and intimate</option><option>Urgent</option></select></label><label class="editor-field editor-field-wide">Dialogue line<textarea id="editorDialogue" rows="3" maxlength="180" placeholder="Write the line this character says…"></textarea></label></div><p class="dialogue-hint">This is manual dialogue writing. It stays in this browser with your scene draft; no text is sent anywhere.</p></fieldset>
+            <fieldset class="dialogue-editor"><legend>Dialogue editor</legend><div class="editor-grid"><label class="editor-field">Speaker<input id="editorSpeaker" type="text" maxlength="40" value="Lead character" /></label><label class="editor-field">Delivery<select id="editorDelivery"><option>Natural</option><option>Warm &amp; reassuring</option><option>Bright &amp; energetic</option><option>Quiet and intimate</option><option>Urgent</option></select></label><label class="editor-field editor-field-wide">Dialogue line<textarea id="editorDialogue" rows="3" maxlength="180" placeholder="Use Extract text above, or write the line this character says…"></textarea></label></div><p class="dialogue-hint">Detected text is a suggestion—review and correct it before saving. It stays in this browser with your scene draft.</p></fieldset>
             <fieldset class="panel-picker"><legend>Focus panel</legend><div class="panel-choice-row"><button class="panel-choice" type="button" data-panel="Establishing shot" aria-pressed="true">01 <span>Establishing shot</span></button><button class="panel-choice" type="button" data-panel="Character reaction" aria-pressed="false">02 <span>Character reaction</span></button><button class="panel-choice" type="button" data-panel="Dialogue beat" aria-pressed="false">03 <span>Dialogue beat</span></button></div></fieldset>
             <div class="editor-actions"><p id="draftStatus" aria-live="polite">Changes are saved only when you choose Save scene draft.</p><div class="editor-button-row"><button class="secondary" id="saveProjectButton" type="button">Save to library</button><button class="primary" type="submit">Save scene draft</button></div></div>
           </form>
@@ -104,6 +109,6 @@
       <section class="gallery" id="gallery"><div class="section-heading"><p class="eyebrow"><span></span> Made for every kind of story</p><h2>Your world. Your style.</h2></div><div class="gallery-grid"><div class="gallery-card card-purple"><span>Fantasy adventure</span><b>Moonlit quests</b></div><div class="gallery-card card-orange"><span>Slice of life</span><b>Small, bright moments</b></div><div class="gallery-card card-blue"><span>Sci-fi</span><b>Beyond the stars</b></div></div></section>
     </main>
     <footer><a class="brand" href="#top"><span class="brand-mark">✦</span>MangaMotion</a><p>For the stories only you can tell.</p><span>© 2026 MangaMotion</span></footer>
-    <script src="app.js"></script>
+    <script src="app.js?v=ocr-page-selection-1"></script>
   </body>
 </html>

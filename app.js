@@ -15,6 +15,13 @@ const pdfPreview = document.querySelector('#pdfPreview');
 const previewTitle = document.querySelector('#previewTitle');
 const previewKind = document.querySelector('#previewKind');
 const previewMeta = document.querySelector('#previewMeta');
+const ocrCard = document.querySelector('#ocrCard');
+const ocrButton = document.querySelector('#ocrButton');
+const ocrStatus = document.querySelector('#ocrStatus');
+const ocrTitle = document.querySelector('#ocrTitle');
+const pdfPagePicker = document.querySelector('#pdfPagePicker');
+const pdfPageNumber = document.querySelector('#pdfPageNumber');
+const pdfPageHint = document.querySelector('#pdfPageHint');
 const scenePlan = document.querySelector('#scenePlan');
 const planSource = document.querySelector('#planSource');
 const openPlanButton = document.querySelector('#openPlanButton');
@@ -61,6 +68,9 @@ let uploadTimers = [];
 let previewUrl = '';
 let selectedPanel = 'Establishing shot';
 let selectedFileIsPdf = false;
+let selectedFile = null;
+let ocrLibraryPromise;
+let pdfLibraryPromise;
 let previewFrame = 0;
 let previewStartedAt = 0;
 const sceneDraftKey = 'mangamotion-scene-draft';
@@ -175,7 +185,7 @@ function applySceneDraft(draft) {
   sceneTiming.textContent = `Scene 01 · 00:00–00:${String(appliedDraft.duration).padStart(2, '0')}`;
   setTags([appliedDraft.mood, appliedDraft.camera, `${appliedDraft.duration} sec`, appliedDraft.panel]);
   dialogueQuote.textContent = formatDialogue(appliedDraft.dialogue);
-  dialogueMeta.textContent = appliedDraft.dialogue ? `${appliedDraft.speaker} · ${appliedDraft.delivery}` : 'Write a line manually in the scene editor. OCR suggestions can be added later.';
+  dialogueMeta.textContent = appliedDraft.dialogue ? `${appliedDraft.speaker} · ${appliedDraft.delivery}` : 'Use the image text reader or write a line manually in the scene editor.';
   updatePanelChoices();
   updatePlayerCopy(appliedDraft);
 }
@@ -246,11 +256,17 @@ function formatFileSize(bytes) {
 function clearPreview() {
   if (previewUrl) URL.revokeObjectURL(previewUrl);
   previewUrl = '';
+  selectedFile = null;
+  selectedFileIsPdf = false;
   imagePreview.removeAttribute('src');
   pdfPreview.removeAttribute('src');
   imagePreview.classList.add('hidden');
   pdfPreview.classList.add('hidden');
   filePreview.classList.add('hidden');
+  ocrCard.classList.add('hidden');
+  pdfPagePicker.classList.add('hidden');
+  pdfPageNumber.value = 4;
+  pdfPageNumber.removeAttribute('max');
   scenePlan.classList.add('hidden');
   sceneEditor.classList.add('hidden');
   animationPlayer.classList.add('hidden');
@@ -259,6 +275,7 @@ function clearPreview() {
 
 function showPreview(file) {
   clearPreview();
+  selectedFile = file;
   previewUrl = URL.createObjectURL(file);
   const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
   selectedFileIsPdf = isPdf;
@@ -268,11 +285,226 @@ function showPreview(file) {
   if (isPdf) {
     pdfPreview.src = `${previewUrl}#page=1&view=FitH`;
     pdfPreview.classList.remove('hidden');
+    pdfPagePicker.classList.remove('hidden');
+    pdfPageHint.textContent = 'Checking the number of pages…';
+    preparePdfPagePicker(file);
   } else {
     imagePreview.src = previewUrl;
     imagePreview.classList.remove('hidden');
   }
+  ocrCard.classList.remove('hidden');
+  ocrButton.disabled = false;
+  ocrTitle.textContent = isPdf ? 'Find dialogue in this PDF' : 'Read dialogue from this image';
+  ocrButton.textContent = isPdf ? 'Find comic dialogue' : 'Extract text';
+  ocrStatus.textContent = isPdf
+    ? 'Reads comic pages locally to find dialogue. This can take a little longer for scanned PDFs.'
+    : 'Use free browser-based OCR to find text. You can review it before saving.';
   filePreview.classList.remove('hidden');
+}
+
+async function preparePdfPagePicker(file) {
+  let pdf;
+  try {
+    const pdfjsLib = await loadPdfLibrary();
+    const documentTask = pdfjsLib.getDocument({ data: await file.arrayBuffer() });
+    pdf = await documentTask.promise;
+    if (selectedFile !== file) return;
+    const suggestedPage = Math.min(Math.max(1, 4), pdf.numPages);
+    pdfPageNumber.max = pdf.numPages;
+    pdfPageNumber.value = suggestedPage;
+    pdfPageHint.textContent = `This PDF has ${pdf.numPages} pages. Start with a comic page, then choose Find comic dialogue.`;
+  } catch {
+    if (selectedFile === file) pdfPageHint.textContent = 'Enter the comic page number you want to read.';
+  } finally {
+    if (pdf) pdf.destroy();
+  }
+}
+
+function loadOcrLibrary() {
+  if (window.Tesseract) return Promise.resolve(window.Tesseract);
+  if (ocrLibraryPromise) return ocrLibraryPromise;
+  ocrLibraryPromise = new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+    script.onload = () => window.Tesseract ? resolve(window.Tesseract) : reject(new Error('The OCR reader did not load.'));
+    script.onerror = () => reject(new Error('The OCR reader could not be downloaded. Check your internet connection and try again.'));
+    document.head.append(script);
+  });
+  return ocrLibraryPromise;
+}
+
+function loadPdfLibrary() {
+  if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+  if (pdfLibraryPromise) return pdfLibraryPromise;
+  pdfLibraryPromise = new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    script.onload = () => {
+      if (!window.pdfjsLib) {
+        reject(new Error('The PDF reader did not load. Please try again.'));
+        return;
+      }
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      resolve(window.pdfjsLib);
+    };
+    script.onerror = () => reject(new Error('The PDF reader could not be downloaded. Check your internet connection and try again.'));
+    document.head.append(script);
+  });
+  return pdfLibraryPromise;
+}
+
+function looksLikeFrontMatter(text) {
+  return /copyright|all rights reserved|published by|imprint|isbn|library of congress|new york times|bestselling author|read an excerpt|coming soon|scholastic|with color by|an imprint of/i.test(text);
+}
+
+function scoreEmbeddedDialogue(text) {
+  if (!text || looksLikeFrontMatter(text)) return 0;
+  const lowerCaseWords = (text.match(/\b[a-z]{2,}\b/g) || []).length;
+  const dialoguePunctuation = (text.match(/[.!?…]/g) || []).length;
+  const allCapsWords = (text.match(/\b[A-Z]{3,}\b/g) || []).length;
+
+  // Comic dialogue normally has several lower-case words and sentence punctuation.
+  // Credits and cover copy tend to be upper-case, short, or metadata-heavy.
+  if (lowerCaseWords < 5 || dialoguePunctuation < 1) return 0;
+  return lowerCaseWords * 3 + dialoguePunctuation * 12 - allCapsWords;
+}
+
+function selectedPdfPage() {
+  const requestedPage = Number.parseInt(pdfPageNumber.value, 10) || 1;
+  const maximumPage = Number.parseInt(pdfPageNumber.max, 10) || requestedPage;
+  return Math.min(Math.max(1, requestedPage), maximumPage);
+}
+
+async function findEmbeddedPdfPageText(file, pageNumber) {
+  const pdfjsLib = await loadPdfLibrary();
+  const documentTask = pdfjsLib.getDocument({ data: await file.arrayBuffer() });
+  const pdf = await documentTask.promise;
+  const safePageNumber = Math.min(pageNumber, pdf.numPages);
+  ocrStatus.textContent = `Reading the text already included on PDF page ${safePageNumber}…`;
+  const page = await pdf.getPage(safePageNumber);
+  const content = await page.getTextContent();
+  const text = content.items.map(item => item.str).join(' ').replace(/\s+/g, ' ').trim();
+  page.cleanup();
+  pdf.destroy();
+  return scoreEmbeddedDialogue(text) > 0 ? { text, pageNumber: safePageNumber } : null;
+}
+
+function prepareCanvasForOcr(sourceCanvas) {
+  const longestSide = Math.max(sourceCanvas.width, sourceCanvas.height);
+  const scale = Math.min(2.5, 2400 / longestSide);
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(sourceCanvas.width * scale));
+  canvas.height = Math.max(1, Math.round(sourceCanvas.height * scale));
+  const context = canvas.getContext('2d', { willReadFrequently: true });
+  context.drawImage(sourceCanvas, 0, 0, canvas.width, canvas.height);
+
+  const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+  for (let index = 0; index < pixels.data.length; index += 4) {
+    const red = pixels.data[index];
+    const green = pixels.data[index + 1];
+    const blue = pixels.data[index + 2];
+    const brightness = red * 0.299 + green * 0.587 + blue * 0.114;
+    const value = brightness > 185 ? 255 : brightness < 105 ? 0 : Math.round((brightness - 105) * 3.4);
+    pixels.data[index] = value;
+    pixels.data[index + 1] = value;
+    pixels.data[index + 2] = value;
+  }
+  context.putImageData(pixels, 0, 0);
+  return canvas;
+}
+
+async function prepareImageForOcr(file) {
+  const image = await createImageBitmap(file);
+  const canvas = document.createElement('canvas');
+  canvas.width = image.width;
+  canvas.height = image.height;
+  canvas.getContext('2d').drawImage(image, 0, 0);
+  image.close();
+  return prepareCanvasForOcr(canvas);
+}
+
+async function renderPdfPageForOcr(page) {
+  const viewport = page.getViewport({ scale: 2 });
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.ceil(viewport.width);
+  canvas.height = Math.ceil(viewport.height);
+  await page.render({ canvasContext: canvas.getContext('2d', { willReadFrequently: true }), viewport }).promise;
+  return prepareCanvasForOcr(canvas);
+}
+
+function cleanOcrText(text) {
+  return text.replace(/\n{3,}/g, '\n\n').replace(/[ \t]+\n/g, '\n').trim();
+}
+
+async function recognizeText(Tesseract, source, statusPrefix) {
+  const result = await Tesseract.recognize(source, 'eng', {
+    logger: update => {
+      if (update.status === 'recognizing text') {
+        ocrStatus.textContent = `${statusPrefix} ${Math.round(update.progress * 100)}%`;
+      }
+    }
+  });
+  return cleanOcrText(result.data.text);
+}
+
+async function findComicPdfTextWithOcr(file, pageNumber) {
+  const pdfjsLib = await loadPdfLibrary();
+  const documentTask = pdfjsLib.getDocument({ data: await file.arrayBuffer() });
+  const pdf = await documentTask.promise;
+  const Tesseract = await loadOcrLibrary();
+  const safePageNumber = Math.min(pageNumber, pdf.numPages);
+  ocrStatus.textContent = `Preparing comic page ${safePageNumber} for local text reading…`;
+  const page = await pdf.getPage(safePageNumber);
+  const canvas = await renderPdfPageForOcr(page);
+  page.cleanup();
+  pdf.destroy();
+  const text = await recognizeText(Tesseract, canvas, `Reading comic page ${safePageNumber} locally…`);
+  if (!text || looksLikeFrontMatter(text)) {
+    throw new Error(`No clear dialogue was found on page ${safePageNumber}. Choose another comic page and try again.`);
+  }
+  return { text, pageNumber: safePageNumber };
+}
+
+async function extractText() {
+  if (!selectedFile) return;
+  ocrButton.disabled = true;
+  ocrButton.textContent = 'Reading…';
+  ocrStatus.textContent = 'Preparing the free text reader in this browser…';
+  try {
+    let text = '';
+    let source = 'image';
+    let pageNumber = 0;
+
+    if (selectedFileIsPdf) {
+      const pageToRead = selectedPdfPage();
+      const embeddedResult = await findEmbeddedPdfPageText(selectedFile, pageToRead);
+      const result = embeddedResult || await findComicPdfTextWithOcr(selectedFile, pageToRead);
+      text = result.text;
+      pageNumber = result.pageNumber;
+      source = embeddedResult ? 'PDF text layer' : 'PDF page image';
+    } else {
+      const Tesseract = await loadOcrLibrary();
+      ocrStatus.textContent = 'Improving contrast so comic dialogue is easier to read…';
+      const preparedImage = await prepareImageForOcr(selectedFile);
+      text = await recognizeText(Tesseract, preparedImage, 'Reading dialogue locally…');
+    }
+
+    sceneEditor.classList.remove('hidden');
+    editorDialogue.value = text;
+    draftStatus.textContent = text
+      ? 'Text was read locally. Review it, then choose Save scene draft.'
+      : 'No clear text was found. Try a sharper image or write the dialogue manually.';
+    ocrStatus.textContent = text
+      ? `Text from ${source}${pageNumber ? ` page ${pageNumber}` : ''} was placed in the dialogue editor. Please review it for spelling and panel order.`
+      : 'No clear text was found. You can still write the dialogue manually.';
+    sceneEditor.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    editorDialogue.focus();
+  } catch (error) {
+    ocrStatus.textContent = error.message || 'The text reader could not finish. Please try again.';
+  } finally {
+    ocrButton.disabled = false;
+    ocrButton.textContent = selectedFileIsPdf ? 'Find comic dialogue' : 'Extract text';
+  }
 }
 
 function beginUpload(file) {
@@ -305,6 +537,7 @@ function beginUpload(file) {
 }
 
 browseButton.addEventListener('click', () => fileInput.click());
+ocrButton.addEventListener('click', extractText);
 fileInput.addEventListener('change', () => beginUpload(fileInput.files[0]));
 startButton.addEventListener('click', () => document.querySelector('#upload').scrollIntoView({ behavior: 'smooth' }));
 ['dragenter', 'dragover'].forEach(event => dropZone.addEventListener(event, e => { e.preventDefault(); dropZone.classList.add('dragging'); }));
