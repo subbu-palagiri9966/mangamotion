@@ -22,6 +22,7 @@ const ocrTitle = document.querySelector('#ocrTitle');
 const pdfPagePicker = document.querySelector('#pdfPagePicker');
 const pdfPageNumber = document.querySelector('#pdfPageNumber');
 const pdfPageHint = document.querySelector('#pdfPageHint');
+const showPdfPageButton = document.querySelector('#showPdfPageButton');
 const scenePlan = document.querySelector('#scenePlan');
 const planSource = document.querySelector('#planSource');
 const openPlanButton = document.querySelector('#openPlanButton');
@@ -312,7 +313,8 @@ async function preparePdfPagePicker(file) {
     const suggestedPage = Math.min(Math.max(1, 4), pdf.numPages);
     pdfPageNumber.max = pdf.numPages;
     pdfPageNumber.value = suggestedPage;
-    pdfPageHint.textContent = `This PDF has ${pdf.numPages} pages. Start with a comic page, then choose Find comic dialogue.`;
+    pdfPageHint.textContent = `This PDF has ${pdf.numPages} pages. Choose a comic page, press Show page, then choose Find comic dialogue.`;
+    showSelectedPdfPage();
   } catch {
     if (selectedFile === file) pdfPageHint.textContent = 'Enter the comic page number you want to read.';
   } finally {
@@ -373,6 +375,14 @@ function selectedPdfPage() {
   const requestedPage = Number.parseInt(pdfPageNumber.value, 10) || 1;
   const maximumPage = Number.parseInt(pdfPageNumber.max, 10) || requestedPage;
   return Math.min(Math.max(1, requestedPage), maximumPage);
+}
+
+function showSelectedPdfPage() {
+  if (!selectedFileIsPdf || !previewUrl) return;
+  const pageNumber = selectedPdfPage();
+  pdfPageNumber.value = pageNumber;
+  pdfPreview.src = `${previewUrl}#page=${pageNumber}&view=FitH`;
+  pdfPageHint.textContent = `Showing page ${pageNumber}. Confirm it contains the comic panels you want, then choose Find comic dialogue.`;
 }
 
 async function findEmbeddedPdfPageText(file, pageNumber) {
@@ -538,6 +548,8 @@ function beginUpload(file) {
 
 browseButton.addEventListener('click', () => fileInput.click());
 ocrButton.addEventListener('click', extractText);
+showPdfPageButton.addEventListener('click', showSelectedPdfPage);
+pdfPageNumber.addEventListener('change', showSelectedPdfPage);
 fileInput.addEventListener('change', () => beginUpload(fileInput.files[0]));
 startButton.addEventListener('click', () => document.querySelector('#upload').scrollIntoView({ behavior: 'smooth' }));
 ['dragenter', 'dragover'].forEach(event => dropZone.addEventListener(event, e => { e.preventDefault(); dropZone.classList.add('dragging'); }));
