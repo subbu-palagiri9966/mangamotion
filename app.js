@@ -23,6 +23,10 @@ const pdfPagePicker = document.querySelector('#pdfPagePicker');
 const pdfPageNumber = document.querySelector('#pdfPageNumber');
 const pdfPageHint = document.querySelector('#pdfPageHint');
 const showPdfPageButton = document.querySelector('#showPdfPageButton');
+const panelCropper = document.querySelector('#panelCropper');
+const panelCropCanvas = document.querySelector('#panelCropCanvas');
+const panelCropStatus = document.querySelector('#panelCropStatus');
+const resetPanelSelectionButton = document.querySelector('#resetPanelSelectionButton');
 const scenePlan = document.querySelector('#scenePlan');
 const planSource = document.querySelector('#planSource');
 const openPlanButton = document.querySelector('#openPlanButton');
@@ -72,6 +76,9 @@ let selectedFileIsPdf = false;
 let selectedFile = null;
 let ocrLibraryPromise;
 let pdfLibraryPromise;
+let selectedPdfPanelCrop = null;
+let panelCropPointerStart = null;
+let panelCropPageNumber = 0;
 let previewFrame = 0;
 let previewStartedAt = 0;
 const sceneDraftKey = 'mangamotion-scene-draft';
@@ -266,6 +273,12 @@ function clearPreview() {
   filePreview.classList.add('hidden');
   ocrCard.classList.add('hidden');
   pdfPagePicker.classList.add('hidden');
+  panelCropper.classList.add('hidden');
+  selectedPdfPanelCrop = null;
+  panelCropPointerStart = null;
+  panelCropPageNumber = 0;
+  panelCropCanvas.width = 0;
+  panelCropCanvas.height = 0;
   pdfPageNumber.value = 4;
   pdfPageNumber.removeAttribute('max');
   scenePlan.classList.add('hidden');
@@ -383,6 +396,112 @@ function showSelectedPdfPage() {
   pdfPageNumber.value = pageNumber;
   pdfPreview.src = `${previewUrl}#page=${pageNumber}&view=FitH`;
   pdfPageHint.textContent = `Showing page ${pageNumber}. Confirm it contains the comic panels you want, then choose Find comic dialogue.`;
+  renderPdfPageForPanelSelection(selectedFile, pageNumber);
+}
+
+function clamp(value, minimum, maximum) {
+  return Math.min(Math.max(value, minimum), maximum);
+}
+
+function normalisePanelCrop(start, end) {
+  const left = clamp(Math.min(start.x, end.x), 0, 1);
+  const top = clamp(Math.min(start.y, end.y), 0, 1);
+  const right = clamp(Math.max(start.x, end.x), 0, 1);
+  const bottom = clamp(Math.max(start.y, end.y), 0, 1);
+  return { x: left, y: top, width: right - left, height: bottom - top };
+}
+
+function drawPanelSelection() {
+  const context = panelCropCanvas.getContext('2d');
+  if (!context || !panelCropCanvas.width || !panelCropCanvas.height) return;
+  const image = panelCropCanvas._sourceImage;
+  context.clearRect(0, 0, panelCropCanvas.width, panelCropCanvas.height);
+  context.drawImage(image, 0, 0, panelCropCanvas.width, panelCropCanvas.height);
+  if (!selectedPdfPanelCrop || selectedPdfPanelCrop.pageNumber !== panelCropPageNumber) return;
+
+  const { x, y, width, height } = selectedPdfPanelCrop;
+  const left = x * panelCropCanvas.width;
+  const top = y * panelCropCanvas.height;
+  const cropWidth = width * panelCropCanvas.width;
+  const cropHeight = height * panelCropCanvas.height;
+  context.fillStyle = 'rgba(24, 16, 54, 0.48)';
+  context.fillRect(0, 0, panelCropCanvas.width, panelCropCanvas.height);
+  context.save();
+  context.beginPath();
+  context.rect(left, top, cropWidth, cropHeight);
+  context.clip();
+  context.drawImage(image, 0, 0, panelCropCanvas.width, panelCropCanvas.height);
+  context.restore();
+  context.strokeStyle = '#7655ee';
+  context.lineWidth = Math.max(3, panelCropCanvas.width / 220);
+  context.setLineDash([10, 6]);
+  context.strokeRect(left, top, cropWidth, cropHeight);
+  context.setLineDash([]);
+}
+
+function panelCanvasPoint(event) {
+  const bounds = panelCropCanvas.getBoundingClientRect();
+  return {
+    x: clamp((event.clientX - bounds.left) / bounds.width, 0, 1),
+    y: clamp((event.clientY - bounds.top) / bounds.height, 0, 1)
+  };
+}
+
+function setPanelCrop(start, end) {
+  const crop = normalisePanelCrop(start, end);
+  if (crop.width < 0.04 || crop.height < 0.04) {
+    selectedPdfPanelCrop = null;
+    panelCropStatus.textContent = 'Selection is too small. Drag around one full panel or speech area.';
+  } else {
+    selectedPdfPanelCrop = { ...crop, pageNumber: panelCropPageNumber };
+    panelCropStatus.textContent = 'Selected panel region. Find comic dialogue will read only this part of page ' + panelCropPageNumber + '.';
+  }
+  drawPanelSelection();
+}
+
+async function renderPdfPageForPanelSelection(file, pageNumber) {
+  if (!file || !selectedFileIsPdf) return;
+  panelCropper.classList.remove('hidden');
+  panelCropStatus.textContent = 'Loading page ' + pageNumber + ' for panel selection…';
+  selectedPdfPanelCrop = null;
+  panelCropPageNumber = pageNumber;
+  try {
+    const pdfjsLib = await loadPdfLibrary();
+    const documentTask = pdfjsLib.getDocument({ data: await file.arrayBuffer() });
+    const pdf = await documentTask.promise;
+    const safePageNumber = Math.min(pageNumber, pdf.numPages);
+    const page = await pdf.getPage(safePageNumber);
+    const viewport = page.getViewport({ scale: 1.25 });
+    const sourceCanvas = document.createElement('canvas');
+    sourceCanvas.width = Math.ceil(viewport.width);
+    sourceCanvas.height = Math.ceil(viewport.height);
+    await page.render({ canvasContext: sourceCanvas.getContext('2d'), viewport }).promise;
+    page.cleanup();
+    pdf.destroy();
+    if (selectedFile !== file || panelCropPageNumber !== pageNumber) return;
+    panelCropCanvas.width = sourceCanvas.width;
+    panelCropCanvas.height = sourceCanvas.height;
+    panelCropCanvas._sourceImage = sourceCanvas;
+    panelCropStatus.textContent = 'Whole page selected. Drag over one panel or speech bubbles to focus OCR.';
+    drawPanelSelection();
+  } catch {
+    if (selectedFile === file) {
+      panelCropper.classList.add('hidden');
+      pdfPageHint.textContent = 'PDF preview is available, but the panel selector could not load. You can still read the whole page.';
+    }
+  }
+}
+
+function cropCanvasToSelection(sourceCanvas, crop) {
+  const left = Math.floor(clamp(crop.x, 0, 1) * sourceCanvas.width);
+  const top = Math.floor(clamp(crop.y, 0, 1) * sourceCanvas.height);
+  const right = Math.ceil(clamp(crop.x + crop.width, 0, 1) * sourceCanvas.width);
+  const bottom = Math.ceil(clamp(crop.y + crop.height, 0, 1) * sourceCanvas.height);
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, right - left);
+  canvas.height = Math.max(1, bottom - top);
+  canvas.getContext('2d').drawImage(sourceCanvas, left, top, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
+  return canvas;
 }
 
 async function findEmbeddedPdfPageText(file, pageNumber) {
@@ -433,13 +552,13 @@ async function prepareImageForOcr(file) {
   return prepareCanvasForOcr(canvas);
 }
 
-async function renderPdfPageForOcr(page) {
+async function renderPdfPageForOcr(page, crop = null) {
   const viewport = page.getViewport({ scale: 2 });
   const canvas = document.createElement('canvas');
   canvas.width = Math.ceil(viewport.width);
   canvas.height = Math.ceil(viewport.height);
   await page.render({ canvasContext: canvas.getContext('2d', { willReadFrequently: true }), viewport }).promise;
-  return prepareCanvasForOcr(canvas);
+  return prepareCanvasForOcr(crop ? cropCanvasToSelection(canvas, crop) : canvas);
 }
 
 function cleanOcrText(text) {
@@ -457,18 +576,20 @@ async function recognizeText(Tesseract, source, statusPrefix) {
   return cleanOcrText(result.data.text);
 }
 
-async function findComicPdfTextWithOcr(file, pageNumber) {
+async function findComicPdfTextWithOcr(file, pageNumber, crop = null) {
   const pdfjsLib = await loadPdfLibrary();
   const documentTask = pdfjsLib.getDocument({ data: await file.arrayBuffer() });
   const pdf = await documentTask.promise;
   const Tesseract = await loadOcrLibrary();
   const safePageNumber = Math.min(pageNumber, pdf.numPages);
-  ocrStatus.textContent = `Preparing comic page ${safePageNumber} for local text reading…`;
+  ocrStatus.textContent = crop
+    ? `Preparing your selected panel from page ${safePageNumber} for local text reading…`
+    : `Preparing comic page ${safePageNumber} for local text reading…`;
   const page = await pdf.getPage(safePageNumber);
-  const canvas = await renderPdfPageForOcr(page);
+  const canvas = await renderPdfPageForOcr(page, crop);
   page.cleanup();
   pdf.destroy();
-  const text = await recognizeText(Tesseract, canvas, `Reading comic page ${safePageNumber} locally…`);
+  const text = await recognizeText(Tesseract, canvas, crop ? `Reading the selected panel locally…` : `Reading comic page ${safePageNumber} locally…`);
   if (!text || looksLikeFrontMatter(text)) {
     throw new Error(`No clear dialogue was found on page ${safePageNumber}. Choose another comic page and try again.`);
   }
@@ -487,11 +608,12 @@ async function extractText() {
 
     if (selectedFileIsPdf) {
       const pageToRead = selectedPdfPage();
-      const embeddedResult = await findEmbeddedPdfPageText(selectedFile, pageToRead);
-      const result = embeddedResult || await findComicPdfTextWithOcr(selectedFile, pageToRead);
+      const selectedCrop = selectedPdfPanelCrop?.pageNumber === pageToRead ? selectedPdfPanelCrop : null;
+      const embeddedResult = selectedCrop ? null : await findEmbeddedPdfPageText(selectedFile, pageToRead);
+      const result = embeddedResult || await findComicPdfTextWithOcr(selectedFile, pageToRead, selectedCrop);
       text = result.text;
       pageNumber = result.pageNumber;
-      source = embeddedResult ? 'PDF text layer' : 'PDF page image';
+      source = embeddedResult ? 'PDF text layer' : selectedCrop ? 'selected PDF panel' : 'PDF page image';
     } else {
       const Tesseract = await loadOcrLibrary();
       ocrStatus.textContent = 'Improving contrast so comic dialogue is easier to read…';
@@ -550,6 +672,26 @@ browseButton.addEventListener('click', () => fileInput.click());
 ocrButton.addEventListener('click', extractText);
 showPdfPageButton.addEventListener('click', showSelectedPdfPage);
 pdfPageNumber.addEventListener('change', showSelectedPdfPage);
+resetPanelSelectionButton.addEventListener('click', () => {
+  selectedPdfPanelCrop = null;
+  panelCropStatus.textContent = `Whole page selected. Find comic dialogue will read all of page ${panelCropPageNumber}.`;
+  drawPanelSelection();
+});
+panelCropCanvas.addEventListener('pointerdown', event => {
+  if (!panelCropCanvas._sourceImage) return;
+  panelCropPointerStart = panelCanvasPoint(event);
+  panelCropCanvas.setPointerCapture(event.pointerId);
+  event.preventDefault();
+});
+panelCropCanvas.addEventListener('pointerup', event => {
+  if (!panelCropPointerStart) return;
+  setPanelCrop(panelCropPointerStart, panelCanvasPoint(event));
+  panelCropPointerStart = null;
+  event.preventDefault();
+});
+panelCropCanvas.addEventListener('pointercancel', () => {
+  panelCropPointerStart = null;
+});
 fileInput.addEventListener('change', () => beginUpload(fileInput.files[0]));
 startButton.addEventListener('click', () => document.querySelector('#upload').scrollIntoView({ behavior: 'smooth' }));
 ['dragenter', 'dragover'].forEach(event => dropZone.addEventListener(event, e => { e.preventDefault(); dropZone.classList.add('dragging'); }));

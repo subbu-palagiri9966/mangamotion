@@ -51,6 +51,11 @@
           <div class="preview-heading"><div><p class="eyebrow"><span></span> Your source material</p><h3 id="previewTitle">Comic preview</h3></div><span class="preview-badge" id="previewKind">Preview</span></div>
           <div class="preview-surface"><img id="imagePreview" class="hidden" alt="Selected comic preview" /><iframe id="pdfPreview" class="hidden" title="Selected comic PDF preview"></iframe></div>
           <p class="preview-note" id="previewMeta">Previewing locally — your file stays on this device.</p>
+          <section class="panel-cropper hidden" id="panelCropper" aria-live="polite">
+            <div class="panel-cropper-heading"><div><b>Choose one panel to read</b><p>For a PDF, drag over the speech bubbles or panel you want OCR to read.</p></div><button class="text-button" id="resetPanelSelectionButton" type="button">Read whole page</button></div>
+            <canvas id="panelCropCanvas" aria-label="PDF panel selection area"></canvas>
+            <p class="panel-crop-status" id="panelCropStatus">Loading the selected PDF page for panel selection…</p>
+          </section>
           <div class="ocr-card hidden" id="ocrCard" aria-live="polite">
             <div class="ocr-copy"><b id="ocrTitle">Read dialogue from this image</b><p id="ocrStatus">Use free browser-based OCR to find text. You can review it before saving.</p></div>
             <div class="pdf-page-picker hidden" id="pdfPagePicker">
@@ -113,6 +118,6 @@
       <section class="gallery" id="gallery"><div class="section-heading"><p class="eyebrow"><span></span> Made for every kind of story</p><h2>Your world. Your style.</h2></div><div class="gallery-grid"><div class="gallery-card card-purple"><span>Fantasy adventure</span><b>Moonlit quests</b></div><div class="gallery-card card-orange"><span>Slice of life</span><b>Small, bright moments</b></div><div class="gallery-card card-blue"><span>Sci-fi</span><b>Beyond the stars</b></div></div></section>
     </main>
     <footer><a class="brand" href="#top"><span class="brand-mark">✦</span>MangaMotion</a><p>For the stories only you can tell.</p><span>© 2026 MangaMotion</span></footer>
-    <script src="app.js?v=ocr-page-selection-1"></script>
+    <script src="app.js?v=panel-selection-1"></script>
   </body>
 </html>
