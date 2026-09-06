@@ -2,9 +2,15 @@
 
 **Repository:** https://github.com/subbu-palagiri9966/mangamotion  
 **Local folder:** `/Users/subramanyampalagiri/Documents/Codex/2026-07-13/browser-plugin-browser-openai-bundled`  
-**Prepared:** 29 August 2026  
-**Current branch:** `feature/local-ocr`  
-**Remote main branch:** up to date through pull request #7 (`07383b6`)
+**Prepared:** 6 September 2026
+**Current branch:** `feature/page-selector`
+**Remote main branch:** up to date through pull request #8 (`2757feb`)
+
+## Status update — 6 September 2026
+
+- Local OCR for images and scanned PDF pages was fixed, tested with `Ghosts Book 1 Excerpt.pdf`, merged as PR #8, and its completed feature branch was deleted.
+- The current in-progress branch, `feature/page-selector`, adds a visible **Show page** control. A creator can enter a PDF page number, confirm the preview shows the intended comic panels, and only then run local OCR.
+- This remains a browser-only prototype. It does not upload selected comics, call a paid AI model, or generate/export real video yet.
 
 ## Project title and short description
 
@@ -58,18 +64,16 @@ The current website is a polished **front-end prototype**, not a production AI v
 - Browser-only scene preview with simple camera-style motion and a progress bar.
 - Local project library: save, reopen, and delete scene-setting snapshots using browser storage.
 
-### Current OCR work in progress - not yet working reliably
+### Local OCR — complete and tested
 
-The active local branch adds free, browser-only dialogue extraction.
+Free, browser-only dialogue extraction is now available on `main`.
 
 - For regular image uploads, it enlarges and contrast-adjusts the image, then uses Tesseract.js locally in the browser.
 - For scanned PDFs, it now renders comic pages locally and runs OCR on them. This is important because the supplied `Ghosts Book 1 Excerpt.pdf` is artwork/scanned pages rather than a PDF with an embedded text layer.
 - The supplied `Ghosts Book 1 Excerpt.pdf` is the current test file. It has artwork/scanned pages, including pages with speech/text bubbles, so normal PDF text extraction alone is not sufficient.
 - OCR is a suggestion only. Comic lettering, stylized fonts, and text inside a phone can be misread, so the creator should review it before saving.
 
-**Important current blocker:** In the most recent manual test, clicking **Find comic dialogue / Extract text** did not put text into the Dialogue line. The user reported this with the Ghosts PDF. The feature therefore remains uncommitted and must be tested and fixed before it is merged. The likely points to inspect are the browser console, external PDF.js/Tesseract.js loading, and the status message below the PDF preview.
-
-**Important:** these latest OCR improvements are currently modified locally and have **not yet been committed or pushed**. Do not claim OCR is complete until the Ghosts PDF test has actually placed useful text in the Dialogue line.
+The `Ghosts Book 1 Excerpt.pdf` test successfully placed detected dialogue into the editor after choosing a comic-story page. OCR is still a suggestion only: comic lettering, stylized fonts, and text inside a phone can be misread, so the creator should review it before saving.
 
 ## 4. What is deliberately not implemented yet
 
@@ -141,21 +145,22 @@ The project has followed a healthy small-feature workflow: create a branch, make
 | 28 Jul 2026 | `feature/animation-preview` | `ce32049` Add local animation preview | Merged as PR #5 (`da71ef0`) |
 | 28 Jul 2026 | `feature/project-library` | `2f25d8e` Add local project library | Merged as PR #6 (`b93ec86`) |
 | 01 Aug 2026 | `feature/dialogue-editor` | `1f8d409` Add local dialogue editor | Merged as PR #7 (`07383b6`) |
-| 11 Aug 2026 | `feature/local-ocr` | not committed yet | Adds local image/scanned-PDF text extraction |
+| 6 Sep 2026 | `feature/local-ocr` | `25a907f` Add local OCR for scanned comic PDFs | Merged as PR #8 (`2757feb`) |
 
-Some old branches were restored/deleted while learning GitHub. That is normal and did not damage the main branch. The current remote `main` contains the completed dialogue editor merge (PR #7).
+Some old branches were restored/deleted while learning GitHub. That is normal and did not damage the main branch. The current remote `main` contains the completed local OCR merge (PR #8).
 
 ## 8. Current repository state
 
-- Current branch: `feature/local-ocr`.
+- Current branch: `feature/page-selector`.
 - Remote: `origin` points to `https://github.com/subbu-palagiri9966/mangamotion.git`.
-- The active OCR change has uncommitted modifications in:
+- The active page-selector change has uncommitted modifications in:
   - `app.js`
   - `index.html`
   - `styles.css`
   - `README.md`
+  - `PROJECT_HANDOFF.md`
 - A local server has been used successfully at `http://localhost:4173`.
-- The landing page and local server load. OCR behaviour still needs a real successful test with the Ghosts PDF before this feature is considered complete.
+- The landing page, local server, and local OCR behaviour load and have been tested with the Ghosts PDF. The page-selector feature should be tested, committed, pushed, reviewed, and merged next.
 
 ## 9. File guide
 
@@ -175,30 +180,31 @@ Some old branches were restored/deleted while learning GitHub. That is normal an
 4. Upload `/Users/subramanyampalagiri/Downloads/Ghosts Book 1 Excerpt.pdf`.
 5. Wait for the regular three-step upload sequence.
 6. In **Comic page to read**, enter a comic-story page such as `10`; do not use the cover or credits pages.
-7. Click **Find comic dialogue** once.
-8. Watch the status text. The app first tries the PDF's own text, then reads only the chosen page locally if it is a scan.
-9. Wait roughly 30-90 seconds on the first run because the free OCR library must download and analyse the page. Later attempts should be faster.
-10. Check that the detected text appears in **Dialogue line** in the scene editor. The Ghosts PDF was verified to return real dialogue from page 10.
-11. Correct OCR mistakes manually, then save the scene draft.
+7. Click **Show page** and visually confirm the preview contains the intended panels.
+8. Click **Find comic dialogue** once.
+9. Watch the status text. The app first tries the PDF's own text, then reads only the chosen page locally if it is a scan.
+10. Wait roughly 30-90 seconds on the first run because the free OCR library must download and analyse the page. Later attempts should be faster.
+11. Check that the detected text appears in **Dialogue line** in the scene editor. The Ghosts PDF was verified to return real dialogue from page 10.
+12. Correct OCR mistakes manually, then save the scene draft.
 
 If OCR still does not fill the dialogue field, open browser Developer Tools and copy the Console error, plus capture a screenshot that includes the small OCR status message directly below the PDF preview. That evidence is needed to diagnose the issue accurately.
 
 ## 11. Next work, in priority order
 
-### A. Finish and commit the current OCR feature
+### A. Finish and commit the current PDF page-selector feature
 
-1. Test with the Ghosts PDF while viewing the status message and browser Console.
-2. Use page `10` and confirm that text from that comic page appears in the dialogue editor.
-3. Test one different valid comic page and verify that the page picker lets the creator control the OCR target.
-4. Commit, push, open PR, merge, then delete `feature/local-ocr`.
+1. Test with the Ghosts PDF while viewing the status message.
+2. Enter page `10`, click **Show page**, and confirm the preview updates to that page.
+3. Choose a second page and confirm the control makes the target obvious before OCR begins.
+4. Commit, push, open PR, merge, then delete `feature/page-selector`.
 
-Suggested commit title: `Add local OCR for scanned comic PDFs`  
-Suggested PR title: `Add local OCR for scanned comic PDFs`  
-Suggested PR description: `Renders scanned PDF pages locally and extracts dialogue with browser-based OCR. Text remains on the user's device and is presented for manual review.`
+Suggested commit title: `Add PDF page selector for OCR`
+Suggested PR title: `Add PDF page selector for OCR`
+Suggested PR description: `Adds a visible PDF page preview control so creators can confirm the comic page before running browser-based OCR.`
 
 ### B. Panel and speech-bubble selection
 
-Add a visual page selector so the user can choose the exact page and panel to read. This will make OCR more accurate than automatically checking the first ten PDF pages.
+Add manual panel and speech-bubble selection after the exact page is confirmed. This will make OCR more accurate than reading an entire comic page at once.
 
 ### C. Real AI analysis backend
 
@@ -232,7 +238,7 @@ Key idea: a **branch** is a safe work lane, a **commit** is a saved checkpoint, 
 
 Copy and paste the following message into a new Codex chat after opening the repository folder:
 
-> I am continuing the MangaMotion project in `/Users/subramanyampalagiri/Documents/Codex/2026-07-13/browser-plugin-browser-openai-bundled`. Read `PROJECT_HANDOFF.md` and `README.md` first. The goal is an anime-inspired creator tool that will eventually turn original comic pages/PDFs into short animated, voiced scenes. This is currently a static HTML/CSS/JavaScript prototype. The active branch is `feature/local-ocr`, and it has uncommitted local changes for free browser-only OCR of images and scanned PDFs. The user can now choose a specific PDF page before text extraction; the Ghosts PDF at `/Users/subramanyampalagiri/Downloads/Ghosts Book 1 Excerpt.pdf` was verified to return real dialogue from page 10. Test it at `http://localhost:4173`, then continue from the "Finish and commit the current OCR feature" section. Explain each GitHub action before asking me to do it, because I am learning GitHub.
+> I am continuing the MangaMotion project in `/Users/subramanyampalagiri/Documents/Codex/2026-07-13/browser-plugin-browser-openai-bundled`. Read `PROJECT_HANDOFF.md` and `README.md` first. The goal is an anime-inspired creator tool that will eventually turn original comic pages/PDFs into short animated, voiced scenes. This is currently a static HTML/CSS/JavaScript prototype. PR #8 completed browser-only OCR for images and scanned PDFs; the Ghosts PDF at `/Users/subramanyampalagiri/Downloads/Ghosts Book 1 Excerpt.pdf` was verified to return dialogue from page 10. The active branch is `feature/page-selector`, with uncommitted changes adding a visible **Show page** control before OCR. Test at `http://localhost:4173`, then continue from the "Finish and commit the current PDF page-selector feature" section. Explain each GitHub action before asking me to do it, because I am learning GitHub.
 
 ## 14. Safety and product principles
 
