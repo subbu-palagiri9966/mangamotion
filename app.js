@@ -17,6 +17,7 @@ const previewKind = document.querySelector('#previewKind');
 const previewMeta = document.querySelector('#previewMeta');
 const ocrCard = document.querySelector('#ocrCard');
 const ocrButton = document.querySelector('#ocrButton');
+const enhanceOcrButton = document.querySelector('#enhanceOcrButton');
 const ocrStatus = document.querySelector('#ocrStatus');
 const ocrTitle = document.querySelector('#ocrTitle');
 const pdfPagePicker = document.querySelector('#pdfPagePicker');
@@ -272,6 +273,7 @@ function clearPreview() {
   pdfPreview.classList.add('hidden');
   filePreview.classList.add('hidden');
   ocrCard.classList.add('hidden');
+  enhanceOcrButton.disabled = true;
   pdfPagePicker.classList.add('hidden');
   panelCropper.classList.add('hidden');
   selectedPdfPanelCrop = null;
@@ -308,6 +310,7 @@ function showPreview(file) {
   }
   ocrCard.classList.remove('hidden');
   ocrButton.disabled = false;
+  enhanceOcrButton.disabled = true;
   ocrTitle.textContent = isPdf ? 'Find dialogue in this PDF' : 'Read dialogue from this image';
   ocrButton.textContent = isPdf ? 'Find comic dialogue' : 'Extract text';
   ocrStatus.textContent = isPdf
@@ -565,6 +568,49 @@ function cleanOcrText(text) {
   return text.replace(/\n{3,}/g, '\n\n').replace(/[ \t]+\n/g, '\n').trim();
 }
 
+function cleanUpOcrDialogue(text) {
+  const usableLines = cleanOcrText(text)
+    .split('\n')
+    .map(line => line.replace(/[=_]{3,}/g, ' ').replace(/^[^A-Za-z“'\"]+|[^A-Za-z.!?…“”'\"]+$/g, '').replace(/\s+/g, ' ').trim())
+    .filter(line => {
+      const letters = (line.match(/[A-Za-z]/g) || []).length;
+      const words = line.match(/[A-Za-z]{2,}/g) || [];
+      return letters >= 4 && words.length >= 2 && !/^(?:[A-Za-z]{1,3}\s+){2,}[A-Za-z]{1,3}$/.test(line);
+    });
+
+  let dialogue = usableLines.join(' ')
+    .replace(/(^|[.!?…]\s+|\s)T\s+(?=(?:WANT|DON['’]T|DO|CAN|WILL|AM|HAVE|HAD|NEED|THINK|KNOW|M|VE)\b)/gi, '$1I ')
+    .replace(/\bI['’]M\b/gi, "I'm")
+    .replace(/\bI['’]VE\b/gi, "I've")
+    .replace(/\s+([.!?…])/g, '$1')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+
+  const letters = dialogue.replace(/[^A-Za-z]/g, '');
+  const uppercaseLetters = letters.replace(/[^A-Z]/g, '').length;
+  if (letters.length && uppercaseLetters / letters.length > 0.72) {
+    dialogue = dialogue.toLowerCase()
+      .replace(/\bi\b/g, 'I')
+      .replace(/\b(i)(['’][a-z]+)/g, (_, pronoun, ending) => pronoun.toUpperCase() + ending)
+      .replace(/(^|[.!?…]\s+)([a-z])/g, (_, start, letter) => start + letter.toUpperCase());
+  }
+  return dialogue;
+}
+
+function enhanceDetectedDialogue() {
+  const before = editorDialogue.value.trim();
+  if (!before) return;
+  const enhanced = cleanUpOcrDialogue(before);
+  if (!enhanced) {
+    ocrStatus.textContent = 'No safe cleanup was found. Keep editing the detected text manually.';
+    return;
+  }
+  editorDialogue.value = enhanced;
+  draftStatus.textContent = 'OCR cleanup applied locally. Review every word, then save the scene draft.';
+  ocrStatus.textContent = 'Cleaned obvious OCR noise and common character mistakes. This is still a suggestion—review it before saving.';
+  editorDialogue.focus();
+}
+
 async function recognizeText(Tesseract, source, statusPrefix) {
   const result = await Tesseract.recognize(source, 'eng', {
     logger: update => {
@@ -623,6 +669,7 @@ async function extractText() {
 
     sceneEditor.classList.remove('hidden');
     editorDialogue.value = text;
+    enhanceOcrButton.disabled = !text;
     draftStatus.textContent = text
       ? 'Text was read locally. Review it, then choose Save scene draft.'
       : 'No clear text was found. Try a sharper image or write the dialogue manually.';
@@ -670,6 +717,7 @@ function beginUpload(file) {
 
 browseButton.addEventListener('click', () => fileInput.click());
 ocrButton.addEventListener('click', extractText);
+enhanceOcrButton.addEventListener('click', enhanceDetectedDialogue);
 showPdfPageButton.addEventListener('click', showSelectedPdfPage);
 pdfPageNumber.addEventListener('change', showSelectedPdfPage);
 resetPanelSelectionButton.addEventListener('click', () => {

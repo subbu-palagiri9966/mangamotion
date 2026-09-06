@@ -11,6 +11,7 @@
 - Local OCR for images and scanned PDF pages was fixed, tested with `Ghosts Book 1 Excerpt.pdf`, merged as PR #8, and its completed feature branch was deleted.
 - PR #9 added a visible **Show page** control. A creator can enter a PDF page number, confirm the preview shows the intended comic panels, and only then run local OCR.
 - The current in-progress branch, `feature/panel-selection`, adds a manual drag-to-select area for a chosen PDF page. OCR will read only that selected panel or speech area; choosing no area keeps whole-page OCR available.
+- The same branch adds a **Clean up text** button after OCR. It removes obvious scan noise and applies conservative common fixes locally; the creator must still review and edit the suggested dialogue.
 - This remains a browser-only prototype. It does not upload selected comics, call a paid AI model, or generate/export real video yet.
 
 ## Project title and short description
@@ -198,7 +199,8 @@ If OCR still does not fill the dialogue field, open browser Developer Tools and 
 1. Test with the Ghosts PDF while viewing the status message.
 2. Enter page `10`, click **Show page**, and confirm the preview updates to that page.
 3. Drag over a panel or the speech bubbles you want to read, then choose **Find comic dialogue**.
-4. Confirm only the selected region is sent to browser-local OCR and that **Read whole page** resets the choice.
+4. Choose **Clean up text** to remove obvious scan noise and common OCR character errors, then review the dialogue manually.
+5. Confirm only the selected region is sent to browser-local OCR and that **Read whole page** resets the choice.
 5. Commit, push, open PR, merge, then delete `feature/panel-selection`.
 
 Suggested commit title: `Add manual panel selection for OCR`
@@ -241,7 +243,7 @@ Key idea: a **branch** is a safe work lane, a **commit** is a saved checkpoint, 
 
 Copy and paste the following message into a new Codex chat after opening the repository folder:
 
-> I am continuing the MangaMotion project in `/Users/subramanyampalagiri/Documents/Codex/2026-07-13/browser-plugin-browser-openai-bundled`. Read `PROJECT_HANDOFF.md` and `README.md` first. The goal is an anime-inspired creator tool that will eventually turn original comic pages/PDFs into short animated, voiced scenes. This is currently a static HTML/CSS/JavaScript prototype. PR #8 completed browser-only OCR for images and scanned PDFs, and PR #9 added an explicit PDF-page selector. The Ghosts PDF at `/Users/subramanyampalagiri/Downloads/Ghosts Book 1 Excerpt.pdf` was verified to return dialogue from page 10. The active branch is `feature/panel-selection`, with uncommitted changes adding a manual drag-to-select panel area before OCR. Test at `http://localhost:4173`, then continue from the "Finish and commit the current manual panel-selection feature" section. Explain each GitHub action before asking me to do it, because I am learning GitHub.
+> I am continuing the MangaMotion project in `/Users/subramanyampalagiri/Documents/Codex/2026-07-13/browser-plugin-browser-openai-bundled`. Read `PROJECT_HANDOFF.md` and `README.md` first. The goal is an anime-inspired creator tool that will eventually turn original comic pages/PDFs into short animated, voiced scenes. This is currently a static HTML/CSS/JavaScript prototype. PR #8 completed browser-only OCR for images and scanned PDFs, and PR #9 added an explicit PDF-page selector. The Ghosts PDF at `/Users/subramanyampalagiri/Downloads/Ghosts Book 1 Excerpt.pdf` was verified to return dialogue from page 10. The active branch is `feature/panel-selection`, with uncommitted changes adding a manual drag-to-select panel area and a conservative **Clean up text** helper before OCR dialogue is reviewed. Test at `http://localhost:4173`, then continue from the "Finish and commit the current manual panel-selection feature" section. Explain each GitHub action before asking me to do it, because I am learning GitHub.
 
 ## 14. Safety and product principles
 
