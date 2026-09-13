@@ -1,5 +1,9 @@
 # MangaMotion implementation handoff
 
+## Update — 13 September 2026
+
+The uploaded backend foundation has been integrated and extended on `feature/ai-animation-pipeline`. See `AI_SETUP.md` for the current executable workflow and setup. Gemini analysis, validated panel crops, Runway task submission/polling, disk persistence and FFmpeg MP4 assembly are now implemented. Provider tests are simulated; no paid call or actual animation-quality validation has occurred. The older roadmap below is historical and describes the intent behind the original static MVP.
+
 ## Product decision
 
 MangaMotion is no longer a dialogue editor or a fake AI scene planner. Its single primary workflow is:
