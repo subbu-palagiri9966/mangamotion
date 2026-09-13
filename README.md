@@ -1,38 +1,38 @@
 # MangaMotion
 
-A friendly, anime-inspired landing page for an AI comic-animation studio. It is the first interface for a product that helps creators turn original comic pages into voiced, animated scenes.
+MangaMotion is a chapter-first comic-to-animation studio. The product is deliberately focused on one journey:
 
-## What works now
+1. Upload one manga/comic chapter as a PDF or ordered page images.
+2. Optionally add an authorised series reference pack.
+3. Map the chapter into shots.
+4. Generate, preview, and export a motion cut.
 
-- Responsive, polished landing page
-- Drag-and-drop or file-picker comic upload interaction
-- Local image or PDF preview before processing (the selected file stays on the device)
-- Free browser-based text extraction: uploaded images are enlarged and contrast-adjusted locally; scanned PDFs are rendered one page at a time and read locally. Choose and preview the exact comic page before extracting its dialogue. Detected text is placed in the dialogue editor for review.
-- Demo Scene Plan screen with example panel sequencing, dialogue direction, and character notes
-- Local scene editor for title, direction, mood, camera, voice, timing, panel focus, and manual dialogue (saved only in the current browser)
-- Browser-only animation preview with simple camera-style motion for the selected scene
-- Local project library for saving, reopening, and deleting scene-setting snapshots
-- Animated three-step processing state and clear completion feedback after a file is selected
-- Product sections explaining the creator workflow and benefits
+There are no required dialogue forms or manual scene-planning screens.
 
-## Run it locally
+## What works in this browser MVP
 
-This is a simple static website. For the image text reader, run a local server from this folder:
+- One PDF or multiple PNG/JPG/WebP page uploads
+- Local PDF rendering for up to 60 pages
+- Automatic selection of pages for a 15, 30, or 60-second cut
+- Landscape, vertical, and square framing
+- Cinematic, energetic, and gentle camera motion
+- Cross-shot transitions and a real-time canvas preview
+- Optional licensed music in preview/export
+- WebM video export in supported Chromium browsers
+- Optional visual, voice, and music reference-pack intake with a rights confirmation
+
+Uploaded material stays in the browser. This version animates the existing artwork; it does not yet generate new character poses or movement.
+
+## Run locally
 
 ```bash
 python3 -m http.server 4173
 ```
 
-Then visit `http://localhost:4173`.
+Open `http://localhost:4173` in a current Chrome or Edge browser. PDF rendering requires an internet connection to load PDF.js from the CDN.
 
-## Next milestones
+## Product boundary
 
-1. Add panel detection to select the most relevant speech bubbles.
-2. Connect a video-generation backend for per-panel animation.
-3. Add user accounts and cloud-based project history.
+Visual references and consented voice samples are collected for the future model pipeline but are not sent anywhere or applied by this static MVP. The product must not scrape anime episodes, clone performers' voices, or reuse commercial soundtracks without permission.
 
-## GitHub learning path
-
-We will use this repository like a real project: make small changes, create a branch when useful, commit with a clear message, push it to GitHub, then open a pull request for review.
-
-This local repository is connected to GitHub. We use feature branches and pull requests for future improvements.
+See [PROJECT_HANDOFF.md](PROJECT_HANDOFF.md) for the implementation roadmap.

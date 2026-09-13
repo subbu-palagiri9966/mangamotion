@@ -1,338 +1,112 @@
-const dropZone = document.querySelector('#dropZone');
-const fileInput = document.querySelector('#fileInput');
-const browseButton = document.querySelector('#browseButton');
-const startButton = document.querySelector('#startButton');
-const processing = document.querySelector('#processing');
-const loadingText = document.querySelector('#loadingText');
-const progressNumber = document.querySelector('#progressNumber');
-const progressBar = document.querySelector('#progressBar');
-const readyCard = document.querySelector('#readyCard');
-const readyText = document.querySelector('#readyText');
-const tryAgainButton = document.querySelector('#tryAgainButton');
-const filePreview = document.querySelector('#filePreview');
-const imagePreview = document.querySelector('#imagePreview');
-const pdfPreview = document.querySelector('#pdfPreview');
-const previewTitle = document.querySelector('#previewTitle');
-const previewKind = document.querySelector('#previewKind');
-const previewMeta = document.querySelector('#previewMeta');
-const ocrCard = document.querySelector('#ocrCard');
-const ocrButton = document.querySelector('#ocrButton');
-const ocrStatus = document.querySelector('#ocrStatus');
-const ocrTitle = document.querySelector('#ocrTitle');
-const pdfPagePicker = document.querySelector('#pdfPagePicker');
-const pdfPageNumber = document.querySelector('#pdfPageNumber');
-const pdfPageHint = document.querySelector('#pdfPageHint');
-const showPdfPageButton = document.querySelector('#showPdfPageButton');
-const scenePlan = document.querySelector('#scenePlan');
-const planSource = document.querySelector('#planSource');
-const openPlanButton = document.querySelector('#openPlanButton');
-const sceneTitle = document.querySelector('#sceneTitle');
-const sceneDescription = document.querySelector('#sceneDescription');
-const sceneTiming = document.querySelector('#sceneTiming');
-const sceneTags = document.querySelector('#sceneTags');
-const openEditorButton = document.querySelector('#openEditorButton');
-const closeEditorButton = document.querySelector('#closeEditorButton');
-const sceneEditor = document.querySelector('#sceneEditor');
-const editorTitle = document.querySelector('#editorTitle');
-const editorDescription = document.querySelector('#editorDescription');
-const editorMood = document.querySelector('#editorMood');
-const editorCamera = document.querySelector('#editorCamera');
-const editorVoice = document.querySelector('#editorVoice');
-const editorDuration = document.querySelector('#editorDuration');
-const editorSpeaker = document.querySelector('#editorSpeaker');
-const editorDelivery = document.querySelector('#editorDelivery');
-const editorDialogue = document.querySelector('#editorDialogue');
-const dialogueQuote = document.querySelector('#dialogueQuote');
-const dialogueMeta = document.querySelector('#dialogueMeta');
-const draftStatus = document.querySelector('#draftStatus');
-const panelChoices = document.querySelectorAll('.panel-choice');
-const openPreviewButton = document.querySelector('#openPreviewButton');
-const closePreviewButton = document.querySelector('#closePreviewButton');
-const animationPlayer = document.querySelector('#animationPlayer');
-const playerStage = document.querySelector('#playerStage');
-const animationImage = document.querySelector('#animationImage');
-const storyboardPoster = document.querySelector('#storyboardPoster');
-const playerTitle = document.querySelector('#playerTitle');
-const playerDetails = document.querySelector('#playerDetails');
-const posterPanel = document.querySelector('#posterPanel');
-const playerMood = document.querySelector('#playerMood');
-const playerTime = document.querySelector('#playerTime');
-const playPreviewButton = document.querySelector('#playPreviewButton');
-const restartPreviewButton = document.querySelector('#restartPreviewButton');
-const previewProgress = document.querySelector('#previewProgress');
-const saveProjectButton = document.querySelector('#saveProjectButton');
-const projectGrid = document.querySelector('#projectGrid');
-const libraryEmpty = document.querySelector('#libraryEmpty');
-const libraryCount = document.querySelector('#libraryCount');
+const $ = selector => document.querySelector(selector);
 
-let uploadTimers = [];
-let previewUrl = '';
-let selectedPanel = 'Establishing shot';
-let selectedFileIsPdf = false;
-let selectedFile = null;
-let ocrLibraryPromise;
+const chapterInput = $('#chapterInput');
+const chapterDrop = $('#chapterDrop');
+const fileSummary = $('#fileSummary');
+const fileTitle = $('#fileTitle');
+const fileMeta = $('#fileMeta');
+const replaceChapter = $('#replaceChapter');
+const visualRefs = $('#visualRefs');
+const voiceRefs = $('#voiceRefs');
+const musicRef = $('#musicRef');
+const rightsCheck = $('#rightsCheck');
+const analyzeButton = $('#analyzeButton');
+const formStatus = $('#formStatus');
+const emptyOutput = $('#emptyOutput');
+const analysisOutput = $('#analysisOutput');
+const renderOutput = $('#renderOutput');
+const shotStrip = $('#shotStrip');
+const referenceSummary = $('#referenceSummary');
+const generateButton = $('#generateButton');
+const motionCanvas = $('#motionCanvas');
+const context = motionCanvas.getContext('2d');
+const canvasOverlay = $('#canvasOverlay');
+const renderStatus = $('#renderStatus');
+const playButton = $('#playButton');
+const restartButton = $('#restartButton');
+const exportButton = $('#exportButton');
+const downloadLink = $('#downloadLink');
+const exportStatus = $('#exportStatus');
+const renderProgress = $('#renderProgress');
+const timeReadout = $('#timeReadout');
+
+let chapterFiles = [];
+let sourceFrames = [];
+let shotFrames = [];
+let ownedUrls = [];
 let pdfLibraryPromise;
-let previewFrame = 0;
-let previewStartedAt = 0;
-const sceneDraftKey = 'mangamotion-scene-draft';
-const projectLibraryKey = 'mangamotion-project-library';
+let animationFrame = 0;
+let playbackStarted = 0;
+let isPlaying = false;
+let musicAudio = null;
+let musicUrl = '';
+let audioContext = null;
+let audioSource = null;
+let audioDestination = null;
 
-function getProjects() {
-  try {
-    const projects = JSON.parse(localStorage.getItem(projectLibraryKey));
-    return Array.isArray(projects) ? projects : [];
-  } catch {
-    return [];
+const naturalSort = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+
+function formatBytes(bytes) {
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function referenceFilesPresent() {
+  return visualRefs.files.length + voiceRefs.files.length + musicRef.files.length > 0;
+}
+
+function updateReferenceLabel(input) {
+  const label = input.closest('label');
+  label.classList.toggle('has-files', input.files.length > 0);
+  const small = label.querySelector('small');
+  if (!small.dataset.defaultCopy) small.dataset.defaultCopy = small.textContent;
+  small.textContent = input.files.length
+    ? `${input.files.length} file${input.files.length === 1 ? '' : 's'} added`
+    : small.dataset.defaultCopy;
+}
+
+function releaseFrames() {
+  stopPlayback();
+  ownedUrls.forEach(url => URL.revokeObjectURL(url));
+  ownedUrls = [];
+  sourceFrames = [];
+  shotFrames = [];
+  shotStrip.replaceChildren();
+  analysisOutput.classList.add('hidden');
+  renderOutput.classList.add('hidden');
+  emptyOutput.classList.remove('hidden');
+  downloadLink.classList.add('hidden');
+}
+
+function setChapter(files) {
+  const selected = [...files];
+  if (!selected.length) return;
+  const allowed = selected.every(file => file.type === 'application/pdf' || file.type.startsWith('image/'));
+  const oversized = selected.find(file => file.size > 150 * 1024 * 1024);
+  const pdfs = selected.filter(file => file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf'));
+  if (!allowed) {
+    formStatus.textContent = 'Use a PDF or PNG, JPG, or WebP page images.';
+    return;
   }
-}
-
-function saveProjects(projects) {
-  localStorage.setItem(projectLibraryKey, JSON.stringify(projects));
-}
-
-function formatSavedDate(timestamp) {
-  return new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' }).format(new Date(timestamp));
-}
-
-function renderProjectLibrary() {
-  const projects = getProjects();
-  projectGrid.replaceChildren();
-  libraryCount.textContent = `${projects.length} ${projects.length === 1 ? 'project' : 'projects'}`;
-  libraryEmpty.classList.toggle('hidden', projects.length > 0);
-  projects.forEach(project => {
-    const card = document.createElement('article');
-    card.className = 'project-card';
-    const label = document.createElement('span');
-    label.className = 'project-date';
-    label.textContent = `Saved ${formatSavedDate(project.savedAt)}`;
-    const title = document.createElement('h3');
-    title.textContent = project.title;
-    const details = document.createElement('p');
-    details.textContent = `${project.mood} · ${project.camera} · ${project.duration} sec`;
-    const actions = document.createElement('div');
-    actions.className = 'project-actions';
-    const openButton = document.createElement('button');
-    openButton.className = 'text-button';
-    openButton.type = 'button';
-    openButton.textContent = 'Open scene';
-    openButton.addEventListener('click', () => {
-      applySceneDraft(project);
-      planSource.textContent = 'Loaded from your local project library. Upload a file again whenever you want to preview source material.';
-      scenePlan.classList.remove('hidden');
-      sceneEditor.classList.remove('hidden');
-      scenePlan.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      draftStatus.textContent = 'Scene loaded from your local project library.';
-    });
-    const deleteButton = document.createElement('button');
-    deleteButton.className = 'text-button danger-button';
-    deleteButton.type = 'button';
-    deleteButton.textContent = 'Delete';
-    deleteButton.addEventListener('click', () => {
-      saveProjects(getProjects().filter(savedProject => savedProject.id !== project.id));
-      renderProjectLibrary();
-    });
-    actions.append(openButton, deleteButton);
-    card.append(label, title, details, actions);
-    projectGrid.append(card);
-  });
-}
-
-function setTags(tags) {
-  sceneTags.replaceChildren();
-  tags.forEach(tag => {
-    const label = document.createElement('span');
-    label.textContent = tag;
-    sceneTags.append(label);
-  });
-}
-
-function updatePanelChoices() {
-  panelChoices.forEach(choice => choice.setAttribute('aria-pressed', String(choice.dataset.panel === selectedPanel)));
-}
-
-function readSceneDraft() {
-  return {
-    title: editorTitle.value.trim() || 'Untitled scene',
-    description: editorDescription.value.trim() || 'Add direction for this scene.',
-    mood: editorMood.value,
-    camera: editorCamera.value,
-    voice: editorVoice.value,
-    duration: Math.min(60, Math.max(1, Number(editorDuration.value) || 12)),
-    panel: selectedPanel,
-    speaker: editorSpeaker.value.trim() || 'Lead character',
-    delivery: editorDelivery.value,
-    dialogue: editorDialogue.value.trim()
-  };
-}
-
-function formatDialogue(dialogue) {
-  return dialogue ? `“${dialogue.replace(/^“|”$/g, '')}”` : '“Add the dialogue from your original panel here.”';
-}
-
-function applySceneDraft(draft) {
-  editorTitle.value = draft.title || 'Untitled scene';
-  editorDescription.value = draft.description || 'Add direction for this scene.';
-  editorMood.value = draft.mood || 'Reflective';
-  editorCamera.value = draft.camera || 'Wide shot';
-  editorVoice.value = draft.voice || 'Warm & reassuring';
-  editorDuration.value = draft.duration || 12;
-  editorSpeaker.value = draft.speaker || 'Lead character';
-  editorDelivery.value = draft.delivery || 'Natural';
-  editorDialogue.value = draft.dialogue || '';
-  selectedPanel = draft.panel || 'Establishing shot';
-  const appliedDraft = readSceneDraft();
-  sceneTitle.textContent = appliedDraft.title;
-  sceneDescription.textContent = appliedDraft.description;
-  sceneTiming.textContent = `Scene 01 · 00:00–00:${String(appliedDraft.duration).padStart(2, '0')}`;
-  setTags([appliedDraft.mood, appliedDraft.camera, `${appliedDraft.duration} sec`, appliedDraft.panel]);
-  dialogueQuote.textContent = formatDialogue(appliedDraft.dialogue);
-  dialogueMeta.textContent = appliedDraft.dialogue ? `${appliedDraft.speaker} · ${appliedDraft.delivery}` : 'Use the image text reader or write a line manually in the scene editor.';
-  updatePanelChoices();
-  updatePlayerCopy(appliedDraft);
-}
-
-function currentSceneDuration() {
-  return Math.min(60, Math.max(1, Number(editorDuration.value) || 12));
-}
-
-function updatePlayerCopy(draft = readSceneDraft()) {
-  playerTitle.textContent = draft.title || 'Your scene in motion';
-  playerDetails.textContent = `${draft.panel} · ${draft.camera} · ${draft.voice}${draft.dialogue ? ` · ${draft.speaker}` : ''}`;
-  posterPanel.textContent = draft.panel;
-  playerMood.textContent = draft.mood;
-  playerTime.textContent = `00:00 / 00:${String(draft.duration).padStart(2, '0')}`;
-  playerStage.dataset.camera = draft.camera.toLowerCase().replaceAll(' ', '-');
-}
-
-function stopPreview() {
-  window.cancelAnimationFrame(previewFrame);
-  playerStage.classList.remove('is-playing');
-  playPreviewButton.textContent = 'Play preview';
-}
-
-function restartPreview() {
-  stopPreview();
-  previewProgress.style.width = '0%';
-  playerTime.textContent = `00:00 / 00:${String(currentSceneDuration()).padStart(2, '0')}`;
-}
-
-function playPreview() {
-  stopPreview();
-  const duration = Math.min(currentSceneDuration() * 400, 8000);
-  previewStartedAt = performance.now();
-  playerStage.classList.add('is-playing');
-  playPreviewButton.textContent = 'Playing…';
-  const tick = now => {
-    const progress = Math.min((now - previewStartedAt) / duration, 1);
-    previewProgress.style.width = `${progress * 100}%`;
-    const seconds = Math.round(progress * currentSceneDuration());
-    playerTime.textContent = `00:${String(seconds).padStart(2, '0')} / 00:${String(currentSceneDuration()).padStart(2, '0')}`;
-    if (progress < 1) previewFrame = window.requestAnimationFrame(tick);
-    else stopPreview();
-  };
-  previewFrame = window.requestAnimationFrame(tick);
-}
-
-function restoreSceneDraft() {
-  try {
-    const savedDraft = JSON.parse(localStorage.getItem(sceneDraftKey));
-    if (savedDraft && typeof savedDraft.title === 'string') {
-      applySceneDraft(savedDraft);
-      draftStatus.textContent = 'Your previous scene draft was restored from this browser.';
-    }
-  } catch {
-    // A missing or invalid browser draft should never interrupt the page.
+  if (oversized) {
+    formStatus.textContent = `${oversized.name} is larger than 150 MB.`;
+    return;
   }
-}
-
-function clearUploadTimers() {
-  uploadTimers.forEach(window.clearTimeout);
-  uploadTimers = [];
-}
-
-function formatFileSize(bytes) {
-  return bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-function clearPreview() {
-  if (previewUrl) URL.revokeObjectURL(previewUrl);
-  previewUrl = '';
-  selectedFile = null;
-  selectedFileIsPdf = false;
-  imagePreview.removeAttribute('src');
-  pdfPreview.removeAttribute('src');
-  imagePreview.classList.add('hidden');
-  pdfPreview.classList.add('hidden');
-  filePreview.classList.add('hidden');
-  ocrCard.classList.add('hidden');
-  pdfPagePicker.classList.add('hidden');
-  pdfPageNumber.value = 4;
-  pdfPageNumber.removeAttribute('max');
-  scenePlan.classList.add('hidden');
-  sceneEditor.classList.add('hidden');
-  animationPlayer.classList.add('hidden');
-  restartPreview();
-}
-
-function showPreview(file) {
-  clearPreview();
-  selectedFile = file;
-  previewUrl = URL.createObjectURL(file);
-  const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
-  selectedFileIsPdf = isPdf;
-  previewTitle.textContent = file.name;
-  previewKind.textContent = isPdf ? 'PDF preview' : 'Image preview';
-  previewMeta.textContent = `${formatFileSize(file.size)} · Previewing locally — your file stays on this device.`;
-  if (isPdf) {
-    pdfPreview.src = `${previewUrl}#page=1&view=FitH`;
-    pdfPreview.classList.remove('hidden');
-    pdfPagePicker.classList.remove('hidden');
-    pdfPageHint.textContent = 'Checking the number of pages…';
-    preparePdfPagePicker(file);
-  } else {
-    imagePreview.src = previewUrl;
-    imagePreview.classList.remove('hidden');
+  if (pdfs.length > 1 || (pdfs.length && selected.length > 1)) {
+    formStatus.textContent = 'Choose one chapter PDF, or a set of page images—not both.';
+    return;
   }
-  ocrCard.classList.remove('hidden');
-  ocrButton.disabled = false;
-  ocrTitle.textContent = isPdf ? 'Find dialogue in this PDF' : 'Read dialogue from this image';
-  ocrButton.textContent = isPdf ? 'Find comic dialogue' : 'Extract text';
-  ocrStatus.textContent = isPdf
-    ? 'Reads comic pages locally to find dialogue. This can take a little longer for scanned PDFs.'
-    : 'Use free browser-based OCR to find text. You can review it before saving.';
-  filePreview.classList.remove('hidden');
-}
-
-async function preparePdfPagePicker(file) {
-  let pdf;
-  try {
-    const pdfjsLib = await loadPdfLibrary();
-    const documentTask = pdfjsLib.getDocument({ data: await file.arrayBuffer() });
-    pdf = await documentTask.promise;
-    if (selectedFile !== file) return;
-    const suggestedPage = Math.min(Math.max(1, 4), pdf.numPages);
-    pdfPageNumber.max = pdf.numPages;
-    pdfPageNumber.value = suggestedPage;
-    pdfPageHint.textContent = `This PDF has ${pdf.numPages} pages. Choose a comic page, press Show page, then choose Find comic dialogue.`;
-    showSelectedPdfPage();
-  } catch {
-    if (selectedFile === file) pdfPageHint.textContent = 'Enter the comic page number you want to read.';
-  } finally {
-    if (pdf) pdf.destroy();
-  }
-}
-
-function loadOcrLibrary() {
-  if (window.Tesseract) return Promise.resolve(window.Tesseract);
-  if (ocrLibraryPromise) return ocrLibraryPromise;
-  ocrLibraryPromise = new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
-    script.onload = () => window.Tesseract ? resolve(window.Tesseract) : reject(new Error('The OCR reader did not load.'));
-    script.onerror = () => reject(new Error('The OCR reader could not be downloaded. Check your internet connection and try again.'));
-    document.head.append(script);
-  });
-  return ocrLibraryPromise;
+  releaseFrames();
+  chapterFiles = selected.sort((a, b) => naturalSort.compare(a.name, b.name));
+  const totalBytes = chapterFiles.reduce((sum, file) => sum + file.size, 0);
+  fileTitle.textContent = chapterFiles.length === 1 ? chapterFiles[0].name : `${chapterFiles.length} ordered page images`;
+  fileMeta.textContent = `${formatBytes(totalBytes)} · stays on this device`;
+  fileSummary.classList.remove('hidden');
+  chapterDrop.classList.add('hidden');
+  analyzeButton.disabled = false;
+  formStatus.textContent = referenceFilesPresent() && !rightsCheck.checked
+    ? 'Confirm your rights to the reference files before mapping.'
+    : 'Chapter ready to map.';
 }
 
 function loadPdfLibrary() {
@@ -342,275 +116,356 @@ function loadPdfLibrary() {
     const script = document.createElement('script');
     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
     script.onload = () => {
-      if (!window.pdfjsLib) {
-        reject(new Error('The PDF reader did not load. Please try again.'));
-        return;
-      }
+      if (!window.pdfjsLib) return reject(new Error('The PDF reader did not load.'));
       window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
       resolve(window.pdfjsLib);
     };
-    script.onerror = () => reject(new Error('The PDF reader could not be downloaded. Check your internet connection and try again.'));
+    script.onerror = () => reject(new Error('The PDF reader could not be downloaded. Check your connection.'));
     document.head.append(script);
   });
   return pdfLibraryPromise;
 }
 
-function looksLikeFrontMatter(text) {
-  return /copyright|all rights reserved|published by|imprint|isbn|library of congress|new york times|bestselling author|read an excerpt|coming soon|scholastic|with color by|an imprint of/i.test(text);
-}
-
-function scoreEmbeddedDialogue(text) {
-  if (!text || looksLikeFrontMatter(text)) return 0;
-  const lowerCaseWords = (text.match(/\b[a-z]{2,}\b/g) || []).length;
-  const dialoguePunctuation = (text.match(/[.!?…]/g) || []).length;
-  const allCapsWords = (text.match(/\b[A-Z]{3,}\b/g) || []).length;
-
-  // Comic dialogue normally has several lower-case words and sentence punctuation.
-  // Credits and cover copy tend to be upper-case, short, or metadata-heavy.
-  if (lowerCaseWords < 5 || dialoguePunctuation < 1) return 0;
-  return lowerCaseWords * 3 + dialoguePunctuation * 12 - allCapsWords;
-}
-
-function selectedPdfPage() {
-  const requestedPage = Number.parseInt(pdfPageNumber.value, 10) || 1;
-  const maximumPage = Number.parseInt(pdfPageNumber.max, 10) || requestedPage;
-  return Math.min(Math.max(1, requestedPage), maximumPage);
-}
-
-function showSelectedPdfPage() {
-  if (!selectedFileIsPdf || !previewUrl) return;
-  const pageNumber = selectedPdfPage();
-  pdfPageNumber.value = pageNumber;
-  pdfPreview.src = `${previewUrl}#page=${pageNumber}&view=FitH`;
-  pdfPageHint.textContent = `Showing page ${pageNumber}. Confirm it contains the comic panels you want, then choose Find comic dialogue.`;
-}
-
-async function findEmbeddedPdfPageText(file, pageNumber) {
-  const pdfjsLib = await loadPdfLibrary();
-  const documentTask = pdfjsLib.getDocument({ data: await file.arrayBuffer() });
-  const pdf = await documentTask.promise;
-  const safePageNumber = Math.min(pageNumber, pdf.numPages);
-  ocrStatus.textContent = `Reading the text already included on PDF page ${safePageNumber}…`;
-  const page = await pdf.getPage(safePageNumber);
-  const content = await page.getTextContent();
-  const text = content.items.map(item => item.str).join(' ').replace(/\s+/g, ' ').trim();
-  page.cleanup();
-  pdf.destroy();
-  return scoreEmbeddedDialogue(text) > 0 ? { text, pageNumber: safePageNumber } : null;
-}
-
-function prepareCanvasForOcr(sourceCanvas) {
-  const longestSide = Math.max(sourceCanvas.width, sourceCanvas.height);
-  const scale = Math.min(2.5, 2400 / longestSide);
-  const canvas = document.createElement('canvas');
-  canvas.width = Math.max(1, Math.round(sourceCanvas.width * scale));
-  canvas.height = Math.max(1, Math.round(sourceCanvas.height * scale));
-  const context = canvas.getContext('2d', { willReadFrequently: true });
-  context.drawImage(sourceCanvas, 0, 0, canvas.width, canvas.height);
-
-  const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
-  for (let index = 0; index < pixels.data.length; index += 4) {
-    const red = pixels.data[index];
-    const green = pixels.data[index + 1];
-    const blue = pixels.data[index + 2];
-    const brightness = red * 0.299 + green * 0.587 + blue * 0.114;
-    const value = brightness > 185 ? 255 : brightness < 105 ? 0 : Math.round((brightness - 105) * 3.4);
-    pixels.data[index] = value;
-    pixels.data[index + 1] = value;
-    pixels.data[index + 2] = value;
-  }
-  context.putImageData(pixels, 0, 0);
-  return canvas;
-}
-
-async function prepareImageForOcr(file) {
-  const image = await createImageBitmap(file);
-  const canvas = document.createElement('canvas');
-  canvas.width = image.width;
-  canvas.height = image.height;
-  canvas.getContext('2d').drawImage(image, 0, 0);
-  image.close();
-  return prepareCanvasForOcr(canvas);
-}
-
-async function renderPdfPageForOcr(page) {
-  const viewport = page.getViewport({ scale: 2 });
-  const canvas = document.createElement('canvas');
-  canvas.width = Math.ceil(viewport.width);
-  canvas.height = Math.ceil(viewport.height);
-  await page.render({ canvasContext: canvas.getContext('2d', { willReadFrequently: true }), viewport }).promise;
-  return prepareCanvasForOcr(canvas);
-}
-
-function cleanOcrText(text) {
-  return text.replace(/\n{3,}/g, '\n\n').replace(/[ \t]+\n/g, '\n').trim();
-}
-
-async function recognizeText(Tesseract, source, statusPrefix) {
-  const result = await Tesseract.recognize(source, 'eng', {
-    logger: update => {
-      if (update.status === 'recognizing text') {
-        ocrStatus.textContent = `${statusPrefix} ${Math.round(update.progress * 100)}%`;
-      }
-    }
+function loadImage(url) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error('One of the chapter pages could not be read.'));
+    image.src = url;
   });
-  return cleanOcrText(result.data.text);
 }
 
-async function findComicPdfTextWithOcr(file, pageNumber) {
+async function imageFrames(files) {
+  const frames = [];
+  for (let index = 0; index < files.length; index += 1) {
+    formStatus.textContent = `Reading page ${index + 1} of ${files.length}…`;
+    const url = URL.createObjectURL(files[index]);
+    ownedUrls.push(url);
+    frames.push({ image: await loadImage(url), url, label: `Page ${index + 1}` });
+  }
+  return frames;
+}
+
+async function pdfFrames(file) {
   const pdfjsLib = await loadPdfLibrary();
-  const documentTask = pdfjsLib.getDocument({ data: await file.arrayBuffer() });
-  const pdf = await documentTask.promise;
-  const Tesseract = await loadOcrLibrary();
-  const safePageNumber = Math.min(pageNumber, pdf.numPages);
-  ocrStatus.textContent = `Preparing comic page ${safePageNumber} for local text reading…`;
-  const page = await pdf.getPage(safePageNumber);
-  const canvas = await renderPdfPageForOcr(page);
-  page.cleanup();
+  const task = pdfjsLib.getDocument({ data: await file.arrayBuffer() });
+  const pdf = await task.promise;
+  const frames = [];
+  const totalPages = pdf.numPages;
+  const pageLimit = Math.min(totalPages, 60);
+  for (let pageNumber = 1; pageNumber <= pageLimit; pageNumber += 1) {
+    formStatus.textContent = `Rendering PDF page ${pageNumber} of ${pageLimit}…`;
+    const page = await pdf.getPage(pageNumber);
+    const viewport = page.getViewport({ scale: 1.35 });
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.ceil(viewport.width);
+    canvas.height = Math.ceil(viewport.height);
+    await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', .88));
+    const url = URL.createObjectURL(blob);
+    ownedUrls.push(url);
+    frames.push({ image: await loadImage(url), url, label: `Page ${pageNumber}` });
+    page.cleanup();
+  }
   pdf.destroy();
-  const text = await recognizeText(Tesseract, canvas, `Reading comic page ${safePageNumber} locally…`);
-  if (!text || looksLikeFrontMatter(text)) {
-    throw new Error(`No clear dialogue was found on page ${safePageNumber}. Choose another comic page and try again.`);
-  }
-  return { text, pageNumber: safePageNumber };
+  return { frames, totalPages, limited: totalPages > pageLimit };
 }
 
-async function extractText() {
-  if (!selectedFile) return;
-  ocrButton.disabled = true;
-  ocrButton.textContent = 'Reading…';
-  ocrStatus.textContent = 'Preparing the free text reader in this browser…';
-  try {
-    let text = '';
-    let source = 'image';
-    let pageNumber = 0;
+function selectShots(frames, duration) {
+  const maximumShots = Math.max(1, Math.floor(duration / 1.5));
+  if (frames.length <= maximumShots) return [...frames];
+  return Array.from({ length: maximumShots }, (_, index) => {
+    const sourceIndex = Math.round(index * (frames.length - 1) / (maximumShots - 1));
+    return frames[sourceIndex];
+  });
+}
 
-    if (selectedFileIsPdf) {
-      const pageToRead = selectedPdfPage();
-      const embeddedResult = await findEmbeddedPdfPageText(selectedFile, pageToRead);
-      const result = embeddedResult || await findComicPdfTextWithOcr(selectedFile, pageToRead);
-      text = result.text;
-      pageNumber = result.pageNumber;
-      source = embeddedResult ? 'PDF text layer' : 'PDF page image';
+function renderShotStrip() {
+  shotStrip.replaceChildren();
+  shotFrames.slice(0, 8).forEach((frame, index) => {
+    const thumb = document.createElement('div');
+    thumb.className = 'shot-thumb';
+    const image = document.createElement('img');
+    image.src = frame.url;
+    image.alt = frame.label;
+    const number = document.createElement('span');
+    number.textContent = String(index + 1).padStart(2, '0');
+    thumb.append(image, number);
+    shotStrip.append(thumb);
+  });
+  if (shotFrames.length > 8) {
+    const more = document.createElement('div');
+    more.className = 'shot-thumb';
+    more.textContent = `+${shotFrames.length - 8}`;
+    more.style.display = 'grid';
+    more.style.placeItems = 'center';
+    more.style.fontWeight = '700';
+    shotStrip.append(more);
+  }
+}
+
+function renderReferenceSummary() {
+  const parts = [];
+  if (visualRefs.files.length) parts.push(`${visualRefs.files.length} visual reference${visualRefs.files.length === 1 ? '' : 's'}`);
+  if (voiceRefs.files.length) parts.push(`${voiceRefs.files.length} consented voice sample${voiceRefs.files.length === 1 ? '' : 's'}`);
+  if (musicRef.files.length) parts.push('1 music track');
+  referenceSummary.textContent = parts.length
+    ? `Authorised reference pack staged: ${parts.join(' · ')}. Visual and voice references are reserved for the future generative backend${musicRef.files.length ? '; music can accompany the local preview' : ''}.`
+    : 'No reference pack added. The motion cut will use only the uploaded chapter artwork.';
+}
+
+async function analyzeChapter() {
+  if (!chapterFiles.length) return;
+  if (referenceFilesPresent() && !rightsCheck.checked) {
+    formStatus.textContent = 'Confirm you have permission to use the reference files.';
+    rightsCheck.focus();
+    return;
+  }
+  analyzeButton.disabled = true;
+  analyzeButton.textContent = 'Mapping chapter…';
+  releaseFrames();
+  try {
+    let pageTotal = chapterFiles.length;
+    let limited = false;
+    if (chapterFiles.length === 1 && (chapterFiles[0].type === 'application/pdf' || chapterFiles[0].name.toLowerCase().endsWith('.pdf'))) {
+      const result = await pdfFrames(chapterFiles[0]);
+      sourceFrames = result.frames;
+      pageTotal = result.totalPages;
+      limited = result.limited;
     } else {
-      const Tesseract = await loadOcrLibrary();
-      ocrStatus.textContent = 'Improving contrast so comic dialogue is easier to read…';
-      const preparedImage = await prepareImageForOcr(selectedFile);
-      text = await recognizeText(Tesseract, preparedImage, 'Reading dialogue locally…');
+      sourceFrames = await imageFrames(chapterFiles);
     }
-
-    sceneEditor.classList.remove('hidden');
-    editorDialogue.value = text;
-    draftStatus.textContent = text
-      ? 'Text was read locally. Review it, then choose Save scene draft.'
-      : 'No clear text was found. Try a sharper image or write the dialogue manually.';
-    ocrStatus.textContent = text
-      ? `Text from ${source}${pageNumber ? ` page ${pageNumber}` : ''} was placed in the dialogue editor. Please review it for spelling and panel order.`
-      : 'No clear text was found. You can still write the dialogue manually.';
-    sceneEditor.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    editorDialogue.focus();
+    const duration = Number($('#targetLength').value);
+    shotFrames = selectShots(sourceFrames, duration);
+    $('#pageCount').textContent = pageTotal;
+    $('#shotCount').textContent = shotFrames.length;
+    $('#runTime').textContent = `${duration}s`;
+    $('#analysisTitle').textContent = chapterFiles.length === 1 ? chapterFiles[0].name.replace(/\.pdf$/i, '') : 'Image chapter';
+    renderShotStrip();
+    renderReferenceSummary();
+    emptyOutput.classList.add('hidden');
+    analysisOutput.classList.remove('hidden');
+    formStatus.textContent = limited
+      ? `Mapped the first ${sourceFrames.length} of ${pageTotal} pages for this browser preview.`
+      : `Mapped ${pageTotal} page${pageTotal === 1 ? '' : 's'} into ${shotFrames.length} motion shots.`;
+    analysisOutput.scrollIntoView({ behavior: 'smooth', block: 'center' });
   } catch (error) {
-    ocrStatus.textContent = error.message || 'The text reader could not finish. Please try again.';
+    formStatus.textContent = error.message || 'The chapter could not be mapped.';
+    emptyOutput.classList.remove('hidden');
   } finally {
-    ocrButton.disabled = false;
-    ocrButton.textContent = selectedFileIsPdf ? 'Find comic dialogue' : 'Extract text';
+    analyzeButton.disabled = false;
+    analyzeButton.innerHTML = 'Map chapter into shots <span>→</span>';
   }
 }
 
-function beginUpload(file) {
-  if (!file) return;
-  clearUploadTimers();
-  showPreview(file);
-  planSource.textContent = `Demo scene direction for ${file.name}.`;
-  readyCard.classList.add('hidden');
-  processing.classList.remove('hidden');
-  progressNumber.textContent = '1 / 3';
-  progressBar.style.width = '33%';
-  loadingText.textContent = `Preparing ${file.name} for your first animated scene`;
-  document.querySelector('#upload').scrollIntoView({ behavior: 'smooth', block: 'center' });
-  uploadTimers.push(window.setTimeout(() => {
-    progressNumber.textContent = '2 / 3';
-    progressBar.style.width = '66%';
-    loadingText.textContent = 'Finding panels, dialogue, and character moments';
-  }, 1500));
-  uploadTimers.push(window.setTimeout(() => {
-    progressNumber.textContent = '3 / 3';
-    progressBar.style.width = '100%';
-    loadingText.textContent = 'Building your first animated scene plan';
-  }, 3000));
-  uploadTimers.push(window.setTimeout(() => {
-    processing.classList.add('hidden');
-    readyText.textContent = `${file.name} is ready for scene direction.`;
-    readyCard.classList.remove('hidden');
-    scenePlan.classList.remove('hidden');
-  }, 4300));
+function configureCanvas() {
+  const format = $('#frameFormat').value;
+  const sizes = { '16:9': [1280, 720], '9:16': [720, 1280], '1:1': [900, 900] };
+  [motionCanvas.width, motionCanvas.height] = sizes[format];
+  motionCanvas.parentElement.style.aspectRatio = format.replace(':', '/');
 }
 
-browseButton.addEventListener('click', () => fileInput.click());
-ocrButton.addEventListener('click', extractText);
-showPdfPageButton.addEventListener('click', showSelectedPdfPage);
-pdfPageNumber.addEventListener('change', showSelectedPdfPage);
-fileInput.addEventListener('change', () => beginUpload(fileInput.files[0]));
-startButton.addEventListener('click', () => document.querySelector('#upload').scrollIntoView({ behavior: 'smooth' }));
-['dragenter', 'dragover'].forEach(event => dropZone.addEventListener(event, e => { e.preventDefault(); dropZone.classList.add('dragging'); }));
-['dragleave', 'drop'].forEach(event => dropZone.addEventListener(event, e => { e.preventDefault(); dropZone.classList.remove('dragging'); }));
-dropZone.addEventListener('drop', e => beginUpload(e.dataTransfer.files[0]));
-tryAgainButton.addEventListener('click', () => {
-  fileInput.value = '';
-  clearPreview();
-  readyCard.classList.add('hidden');
-  fileInput.click();
-});
-openPlanButton.addEventListener('click', () => scenePlan.scrollIntoView({ behavior: 'smooth', block: 'start' }));
-openEditorButton.addEventListener('click', () => {
-  sceneEditor.classList.remove('hidden');
-  sceneEditor.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  editorTitle.focus();
-});
-closeEditorButton.addEventListener('click', () => sceneEditor.classList.add('hidden'));
-panelChoices.forEach(choice => choice.addEventListener('click', () => {
-  selectedPanel = choice.dataset.panel;
-  updatePanelChoices();
-  draftStatus.textContent = `${selectedPanel} selected. Save the draft when you are ready.`;
-}));
-sceneEditor.addEventListener('submit', event => {
+function easeInOut(value) {
+  return value < .5 ? 2 * value * value : 1 - Math.pow(-2 * value + 2, 2) / 2;
+}
+
+function drawCover(image, progress, index, alpha = 1) {
+  const width = motionCanvas.width;
+  const height = motionCanvas.height;
+  const style = $('#motionStyle').value;
+  const strength = style === 'energetic' ? .16 : style === 'gentle' ? .055 : .1;
+  const eased = easeInOut(progress);
+  const zoom = 1.02 + eased * strength;
+  const baseScale = Math.max(width / image.width, height / image.height);
+  const drawWidth = image.width * baseScale * zoom;
+  const drawHeight = image.height * baseScale * zoom;
+  const travelX = Math.max(0, drawWidth - width);
+  const travelY = Math.max(0, drawHeight - height);
+  const horizontal = index % 2 === 0 ? eased : 1 - eased;
+  const vertical = index % 3 === 0 ? eased : .5;
+  context.save();
+  context.globalAlpha = alpha;
+  context.drawImage(image, -travelX * horizontal, -travelY * vertical, drawWidth, drawHeight);
+  context.restore();
+}
+
+function drawFrame(elapsedSeconds) {
+  const duration = Number($('#targetLength').value);
+  const safeElapsed = Math.min(Math.max(0, elapsedSeconds), duration);
+  const shotDuration = duration / shotFrames.length;
+  const index = Math.min(shotFrames.length - 1, Math.floor(safeElapsed / shotDuration));
+  const localProgress = Math.min(1, (safeElapsed - index * shotDuration) / shotDuration);
+  context.fillStyle = '#0b0c10';
+  context.fillRect(0, 0, motionCanvas.width, motionCanvas.height);
+  drawCover(shotFrames[index].image, localProgress, index);
+  if (localProgress > .82 && index < shotFrames.length - 1) {
+    const transition = (localProgress - .82) / .18;
+    drawCover(shotFrames[index + 1].image, 0, index + 1, transition);
+  }
+  const shade = context.createLinearGradient(0, motionCanvas.height * .72, 0, motionCanvas.height);
+  shade.addColorStop(0, 'rgba(0,0,0,0)');
+  shade.addColorStop(1, 'rgba(0,0,0,.62)');
+  context.fillStyle = shade;
+  context.fillRect(0, 0, motionCanvas.width, motionCanvas.height);
+  context.fillStyle = 'rgba(255,255,255,.92)';
+  context.font = `700 ${Math.max(18, Math.round(motionCanvas.width * .018))}px Space Grotesk, sans-serif`;
+  context.fillText(`SHOT ${String(index + 1).padStart(2, '0')}  ·  ${shotFrames[index].label}`, motionCanvas.width * .035, motionCanvas.height * .94);
+  const percent = safeElapsed / duration;
+  renderProgress.style.width = `${percent * 100}%`;
+  timeReadout.textContent = `${formatTime(safeElapsed)} / ${formatTime(duration)}`;
+}
+
+function formatTime(seconds) {
+  const rounded = Math.floor(seconds);
+  return `${String(Math.floor(rounded / 60)).padStart(2, '0')}:${String(rounded % 60).padStart(2, '0')}`;
+}
+
+function stopMusic() {
+  if (!musicAudio) return;
+  musicAudio.pause();
+  musicAudio.currentTime = 0;
+}
+
+function stopPlayback() {
+  cancelAnimationFrame(animationFrame);
+  isPlaying = false;
+  if (playButton) playButton.textContent = '▶ Play';
+  stopMusic();
+}
+
+async function prepareMusic() {
+  if (!musicRef.files.length) return null;
+  if (!musicAudio) {
+    musicUrl = URL.createObjectURL(musicRef.files[0]);
+    musicAudio = new Audio(musicUrl);
+    musicAudio.loop = true;
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    audioSource = audioContext.createMediaElementSource(musicAudio);
+    audioDestination = audioContext.createMediaStreamDestination();
+    audioSource.connect(audioDestination);
+    audioSource.connect(audioContext.destination);
+  }
+  if (audioContext.state === 'suspended') await audioContext.resume();
+  musicAudio.currentTime = 0;
+  return audioDestination;
+}
+
+async function startPlayback(onComplete) {
+  if (!shotFrames.length) return;
+  stopPlayback();
+  const duration = Number($('#targetLength').value);
+  const music = await prepareMusic();
+  if (music) musicAudio.play().catch(() => {});
+  isPlaying = true;
+  playButton.textContent = 'Playing…';
+  playbackStarted = performance.now();
+  const tick = now => {
+    const elapsed = (now - playbackStarted) / 1000;
+    drawFrame(elapsed);
+    if (elapsed < duration && isPlaying) animationFrame = requestAnimationFrame(tick);
+    else {
+      stopPlayback();
+      drawFrame(duration);
+      if (onComplete) onComplete();
+    }
+  };
+  animationFrame = requestAnimationFrame(tick);
+}
+
+function restartPreview() {
+  stopPlayback();
+  drawFrame(0);
+}
+
+function generatePreview() {
+  configureCanvas();
+  analysisOutput.classList.add('hidden');
+  renderOutput.classList.remove('hidden');
+  $('#renderTitle').textContent = $('#analysisTitle').textContent;
+  canvasOverlay.classList.remove('hidden');
+  renderStatus.textContent = 'Building the motion timeline…';
+  drawFrame(0);
+  window.setTimeout(() => {
+    canvasOverlay.classList.add('hidden');
+    startPlayback();
+  }, 650);
+  renderOutput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function supportedMimeType() {
+  const types = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'];
+  return types.find(type => MediaRecorder.isTypeSupported(type)) || '';
+}
+
+async function exportVideo() {
+  if (!window.MediaRecorder || !motionCanvas.captureStream) {
+    exportStatus.textContent = 'This browser cannot export canvas video. Use a current Chrome or Edge browser.';
+    return;
+  }
+  exportButton.disabled = true;
+  downloadLink.classList.add('hidden');
+  exportStatus.textContent = 'Rendering in real time. Keep this tab open until the full video finishes.';
+  stopPlayback();
+  drawFrame(0);
+  const canvasStream = motionCanvas.captureStream(30);
+  const music = await prepareMusic();
+  const tracks = [...canvasStream.getVideoTracks(), ...(music ? music.stream.getAudioTracks() : [])];
+  const stream = new MediaStream(tracks);
+  const mimeType = supportedMimeType();
+  const recorderOptions = { videoBitsPerSecond: 8_000_000 };
+  if (mimeType) recorderOptions.mimeType = mimeType;
+  const recorder = new MediaRecorder(stream, recorderOptions);
+  const chunks = [];
+  recorder.ondataavailable = event => { if (event.data.size) chunks.push(event.data); };
+  recorder.onstop = () => {
+    const blob = new Blob(chunks, { type: recorder.mimeType || 'video/webm' });
+    const url = URL.createObjectURL(blob);
+    ownedUrls.push(url);
+    downloadLink.href = url;
+    downloadLink.download = `${($('#renderTitle').textContent || 'mangamotion').replace(/[^a-z0-9]+/gi, '-').toLowerCase()}-motion-cut.webm`;
+    downloadLink.classList.remove('hidden');
+    exportStatus.textContent = `Video ready · ${formatBytes(blob.size)}`;
+    exportButton.disabled = false;
+  };
+  recorder.start(1000);
+  startPlayback(() => recorder.stop());
+}
+
+chapterDrop.addEventListener('click', () => chapterInput.click());
+replaceChapter.addEventListener('click', () => chapterInput.click());
+chapterInput.addEventListener('change', () => setChapter(chapterInput.files));
+['dragenter', 'dragover'].forEach(name => chapterDrop.addEventListener(name, event => {
   event.preventDefault();
-  const draft = readSceneDraft();
-  applySceneDraft(draft);
-  try {
-    localStorage.setItem(sceneDraftKey, JSON.stringify(draft));
-    draftStatus.textContent = 'Scene draft saved in this browser on this device.';
-  } catch {
-    draftStatus.textContent = 'The scene was updated, but this browser could not save the draft.';
+  chapterDrop.classList.add('dragging');
+}));
+['dragleave', 'drop'].forEach(name => chapterDrop.addEventListener(name, event => {
+  event.preventDefault();
+  chapterDrop.classList.remove('dragging');
+}));
+chapterDrop.addEventListener('drop', event => setChapter(event.dataTransfer.files));
+[visualRefs, voiceRefs, musicRef].forEach(input => input.addEventListener('change', () => {
+  if (input === musicRef && musicAudio) {
+    stopMusic();
+    musicAudio = null;
+    audioSource = null;
+    audioDestination = null;
+    if (audioContext) audioContext.close();
+    audioContext = null;
+    if (musicUrl) URL.revokeObjectURL(musicUrl);
+    musicUrl = '';
   }
+  updateReferenceLabel(input);
+  if (referenceFilesPresent() && !rightsCheck.checked) formStatus.textContent = 'Confirm your rights to the reference files before mapping.';
+}));
+rightsCheck.addEventListener('change', () => {
+  formStatus.textContent = rightsCheck.checked ? 'Reference permission confirmed.' : 'Confirm your rights to the reference files before mapping.';
 });
-saveProjectButton.addEventListener('click', () => {
-  const draft = readSceneDraft();
-  const project = { ...draft, id: `${Date.now()}-${Math.random().toString(16).slice(2)}`, savedAt: Date.now() };
-  try {
-    saveProjects([project, ...getProjects()]);
-    renderProjectLibrary();
-    draftStatus.textContent = 'Scene saved to your local project library.';
-    document.querySelector('#projectLibrary').scrollIntoView({ behavior: 'smooth', block: 'center' });
-  } catch {
-    draftStatus.textContent = 'This browser could not save the project library.';
-  }
+analyzeButton.addEventListener('click', analyzeChapter);
+generateButton.addEventListener('click', generatePreview);
+playButton.addEventListener('click', () => startPlayback());
+restartButton.addEventListener('click', restartPreview);
+exportButton.addEventListener('click', exportVideo);
+window.addEventListener('beforeunload', () => {
+  releaseFrames();
+  if (musicUrl) URL.revokeObjectURL(musicUrl);
 });
-openPreviewButton.addEventListener('click', () => {
-  const draft = readSceneDraft();
-  updatePlayerCopy(draft);
-  animationImage.classList.toggle('hidden', selectedFileIsPdf || !previewUrl);
-  storyboardPoster.classList.toggle('hidden', !selectedFileIsPdf && Boolean(previewUrl));
-  if (!selectedFileIsPdf && previewUrl) animationImage.src = previewUrl;
-  animationPlayer.classList.remove('hidden');
-  restartPreview();
-  animationPlayer.scrollIntoView({ behavior: 'smooth', block: 'center' });
-});
-closePreviewButton.addEventListener('click', () => {
-  stopPreview();
-  animationPlayer.classList.add('hidden');
-});
-playPreviewButton.addEventListener('click', playPreview);
-restartPreviewButton.addEventListener('click', restartPreview);
-restoreSceneDraft();
-renderProjectLibrary();
