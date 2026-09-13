@@ -9,21 +9,22 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="ai-studio.css" />
   </head>
   <body>
     <header class="site-header">
       <a class="brand" href="#top"><span>MM</span>MangaMotion</a>
       <nav><a href="#studio">Studio</a><a href="#pipeline">How it works</a><a href="#rights">Reference rules</a></nav>
-      <a class="header-cta" href="#studio">Create a motion cut</a>
+      <a class="header-cta" href="#studio">Plan a motion cut</a>
     </header>
     <main id="top">
       <section class="hero">
         <div class="hero-copy">
           <p class="kicker"><i></i> Chapter-to-animation studio</p>
           <h1>Don’t wait years.<br /><em>See the next chapter move.</em></h1>
-          <p class="hero-text">Upload a manga or comic chapter. MangaMotion maps its pages into shots and builds a watchable motion cut—without making you write dialogue or direct every panel.</p>
+          <p class="hero-text">Upload a chapter and bring its action to life. Analyze the story, review the selected panels, then generate animated shots—without writing dialogue.</p>
           <div class="hero-actions"><a class="button primary" href="#studio">Upload a chapter <span>→</span></a><a class="plain-link" href="#pipeline">See the pipeline</a></div>
-          <div class="truth-row"><span>✓ PDF &amp; page images</span><span>✓ No dialogue forms</span><span>✓ Local private preview</span></div>
+          <div class="truth-row"><span>✓ PDF &amp; page images</span><span>✓ No dialogue forms</span><span>✓ Paid AI stays off by default</span></div>
         </div>
         <div class="hero-visual" aria-hidden="true">
           <div class="page page-back"><b>07</b><i></i><i></i><i></i></div>
@@ -36,7 +37,7 @@
         <div class="section-intro">
           <p class="kicker"><i></i> MangaMotion Studio</p>
           <h2>One chapter in. One motion cut out.</h2>
-          <p>The browser MVP creates real camera motion from your pages. A generative animation backend can later replace each motion shot without changing this workflow.</p>
+          <p>Choose a free camera-motion preview or connect your AI providers to generate character movement. Review the panels and cost before generating.</p>
         </div>
         <div class="studio-grid">
           <div class="setup-column">
@@ -45,12 +46,12 @@
               <input id="chapterInput" type="file" accept="application/pdf,image/png,image/jpeg,image/webp" multiple hidden />
               <button class="drop-zone" id="chapterDrop" type="button"><span class="upload-mark">↑</span><b>Drop a chapter here</b><small>or choose files · up to 150 MB each</small></button>
               <div class="file-summary hidden" id="fileSummary"><div><b id="fileTitle"></b><small id="fileMeta"></small></div><button id="replaceChapter" type="button">Replace</button></div>
+              <label class="rights-check source-rights"><input id="sourceRightsCheck" type="checkbox" /><span>I confirm this chapter is original, public-domain, or licensed for analysis and generation.</span></label>
             </section>
             <section class="studio-card reference-card">
-              <div class="card-heading"><span class="step-number">02</span><div><h3>Series reference pack <mark>Optional</mark></h3><p>Use only material you created, licensed, or have permission to use.</p></div></div>
+              <div class="card-heading"><span class="step-number">02</span><div><h3>Visual reference pack <mark>Optional</mark></h3><p>Use only material you created, licensed, or have permission to use.</p></div></div>
               <div class="reference-grid">
                 <label><span>Character look</span><small>Images or authorised clips</small><input id="visualRefs" type="file" accept="image/*,video/*" multiple /></label>
-                <label><span>Voice identity</span><small>Consented voice samples</small><input id="voiceRefs" type="file" accept="audio/*" multiple /></label>
                 <label><span>Music</span><small>Your owned/licensed track</small><input id="musicRef" type="file" accept="audio/*" /></label>
               </div>
               <label class="rights-check"><input id="rightsCheck" type="checkbox" /><span>I confirm I have permission to use every reference file I added.</span></label>
@@ -62,7 +63,7 @@
                 <label>Length<select id="targetLength"><option value="15">15 seconds</option><option value="30" selected>30 seconds</option><option value="60">60 seconds</option></select></label>
                 <label>Motion<select id="motionStyle"><option value="cinematic">Cinematic</option><option value="energetic">Energetic</option><option value="gentle">Gentle</option></select></label>
               </div>
-              <button class="button primary wide" id="analyzeButton" type="button" disabled>Map chapter into shots <span>→</span></button>
+              <button class="button primary wide" id="analyzeButton" type="button" disabled>Create a local shot plan <span>→</span></button>
               <p class="form-status" id="formStatus" aria-live="polite">Add a chapter to begin.</p>
             </section>
           </div>
@@ -72,20 +73,38 @@
               <ol><li><span></span>Read chapter pages</li><li><span></span>Build motion shots</li><li><span></span>Render video</li></ol>
             </section>
             <section class="output-card analysis-output hidden" id="analysisOutput" aria-live="polite">
-              <div class="output-heading"><div><small>CHAPTER MAP</small><h3 id="analysisTitle">Ready to animate</h3></div><span class="status-pill">Local MVP</span></div>
+              <div class="output-heading"><div><small>CHAPTER MAP</small><h3 id="analysisTitle">Ready to plan</h3></div><span class="status-pill">Local MVP</span></div>
               <div class="stat-grid"><div><b id="pageCount">0</b><span>pages</span></div><div><b id="shotCount">0</b><span>shots</span></div><div><b id="runTime">0s</b><span>runtime</span></div></div>
               <div class="shot-strip" id="shotStrip"></div>
               <div class="reference-summary" id="referenceSummary"></div>
-              <button class="button primary wide" id="generateButton" type="button">Generate motion cut <span>▶</span></button>
-              <p class="output-note">This version animates the uploaded artwork with framing, camera motion and transitions. It does not invent new character movement yet.</p>
+              <div class="backend-status" id="backendStatus" aria-live="polite">Checking local backend capability…</div>
+              <button class="button estimate wide" id="estimateButton" type="button">See rough video estimate (no charge)</button>
+              <section class="ai-panel" aria-label="AI animation">
+                <h3>Animate the story</h3>
+                <p>First test: up to 6 pages. AI reads the story and selects panels, then generates five-second action shots. No dialogue entry needed. This AI cut is silent; music currently applies only to the camera-motion preview.</p>
+                <p>Analysis sends these pages and any reference images to Google Gemini. Video generation sends selected panel crops to Runway. Both may incur API charges.</p>
+                <label><input id="analysisApproval" type="checkbox"> Allow Gemini analysis for this chapter</label>
+                <button class="button primary wide" id="aiAnalyze" type="button">Analyze story and panels</button>
+                <p id="aiStatus" role="status" aria-live="polite">API keys and FFmpeg are required for AI animation.</p>
+                <div id="aiPlan" class="hidden"></div>
+                <div id="aiApproval" class="hidden">
+                  <p id="aiQuote"></p>
+                  <label><input id="videoApproval" type="checkbox"> Approve one video-generation attempt at this estimate</label>
+                  <button id="aiGenerate" class="button primary wide" type="button">Generate animated shots</button>
+                </div>
+                <video id="aiVideo" class="hidden" controls playsinline preload="metadata"></video>
+                <a id="aiDownload" class="download-link hidden" download="mangamotion-animation.mp4">Download animated MP4</a>
+              </section>
+              <button class="button primary wide" id="generateButton" type="button">Create camera-motion preview <span>▶</span></button>
+              <p class="output-note">The camera-motion preview moves the uploaded artwork with framing and transitions. It does not create new character poses, actions, or animation.</p>
             </section>
             <section class="output-card render-output hidden" id="renderOutput">
-              <div class="output-heading"><div><small>MOTION CUT</small><h3 id="renderTitle">Chapter preview</h3></div><span class="status-pill ready">Ready</span></div>
+              <div class="output-heading"><div><small>MOTION PREVIEW</small><h3 id="renderTitle">Chapter preview</h3></div><span class="status-pill ready">Local only</span></div>
               <div class="canvas-wrap"><canvas id="motionCanvas" width="1280" height="720"></canvas><div class="canvas-overlay" id="canvasOverlay"><span id="renderStatus">Preparing frames…</span></div></div>
               <div class="player-controls"><button id="playButton" type="button">▶ Play</button><button id="restartButton" type="button">↺ Restart</button><span id="timeReadout">00:00 / 00:30</span></div>
               <div class="render-progress"><i id="renderProgress"></i></div>
-              <button class="button export wide" id="exportButton" type="button">Export WebM video</button>
-              <a class="download-link hidden" id="downloadLink">Download finished motion cut</a>
+              <button class="button export wide" id="exportButton" type="button">Export WebM motion preview</button>
+              <a class="download-link hidden" id="downloadLink">Download motion preview</a>
               <p class="form-status" id="exportStatus" aria-live="polite"></p>
             </section>
           </aside>
@@ -94,10 +113,10 @@
       <section class="pipeline" id="pipeline">
         <div class="section-intro left"><p class="kicker"><i></i> The full vision</p><h2>From chapter understanding to generated anime.</h2></div>
         <div class="pipeline-grid">
-          <article class="active"><span>NOW</span><b>Chapter ingestion</b><p>PDF/page upload, ordering, preview and real motion-video export.</p></article>
-          <article><span>NEXT</span><b>Story &amp; character map</b><p>Panel detection, character identity, action and scene continuity.</p></article>
-          <article><span>THEN</span><b>Generative shots</b><p>Consistent character animation guided by authorised references.</p></article>
-          <article><span>FINAL</span><b>Episode assembly</b><p>Shot continuity, consented voices, licensed music and final render.</p></article>
+          <article class="active"><span>NOW</span><b>Local shot planning</b><p>PDF/page upload, ordering, preview and camera-motion WebM export.</p></article>
+          <article><span>FOUNDATION</span><b>Backend job planning</b><p>Rights-gated jobs, provider estimates, and hard guards against unapproved paid calls.</p></article>
+          <article><span>ANALYZE</span><b>Understand the chapter</b><p>Gemini identifies story beats, panel boundaries and recurring characters. Requires your API key.</p></article>
+          <article><span>ANIMATE</span><b>Generated shots &amp; MP4</b><p>Runway generates action shots; FFmpeg joins them. Review the results for story accuracy and character consistency.</p></article>
         </div>
       </section>
       <section class="rights" id="rights">
@@ -107,5 +126,6 @@
     </main>
     <footer><a class="brand" href="#top"><span>MM</span>MangaMotion</a><p>Chapter to motion · Built for authorised stories</p><span>© 2026</span></footer>
     <script src="app.js?v=chapter-motion-1"></script>
+    <script src="ai-studio.js?v=1"></script>
   </body>
 </html>

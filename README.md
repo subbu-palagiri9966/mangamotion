@@ -1,38 +1,37 @@
 # MangaMotion
 
-MangaMotion is a chapter-first comic-to-animation studio. The product is deliberately focused on one journey:
+Upload a comic chapter, analyze its story and panels, and generate short animated shots. No manual dialogue writing is required.
 
-1. Upload one manga/comic chapter as a PDF or ordered page images.
-2. Optionally add an authorised series reference pack.
-3. Map the chapter into shots.
-4. Generate, preview, and export a motion cut.
+## Two workflows
 
-There are no required dialogue forms or manual scene-planning screens.
+- **Camera-motion preview:** local pan/zoom and WebM export, without AI generation.
+- **AI animation:** Gemini story and character analysis → panel crops → Runway image-to-video → FFmpeg MP4 assembly. Requires configured API keys, approved provider calls and FFmpeg. The AI workflow is implemented but has not been tested against paid providers in this workspace.
 
-## What works in this browser MVP
+The first AI cut supports 1–6 chapter pages, up to three visual reference images, and five-second generated shots. The selected target duration sets the maximum shot count; the actual duration and estimate are shown after analysis. Outputs are silent. Appearance descriptions guide consistency but do not guarantee it.
 
-- One PDF or multiple PNG/JPG/WebP page uploads
-- Local PDF rendering for up to 60 pages
-- Automatic selection of pages for a 15, 30, or 60-second cut
-- Landscape, vertical, and square framing
-- Cinematic, energetic, and gentle camera motion
-- Cross-shot transitions and a real-time canvas preview
-- Optional licensed music in preview/export
-- WebM video export in supported Chromium browsers
-- Optional visual, voice, and music reference-pack intake with a rights confirmation
+## Run
 
-Uploaded material stays in the browser. This version animates the existing artwork; it does not yet generate new character poses or movement.
+Use Node.js 22+.
 
-## Run locally
-
-```bash
-python3 -m http.server 4173
+```sh
+npm ci
+npm run dev
 ```
 
-Open `http://localhost:4173` in a current Chrome or Edge browser. PDF rendering requires an internet connection to load PDF.js from the CDN.
+Open **http://127.0.0.1:4173** and keep the terminal open. Without API keys the local preview remains available. PDF decoding downloads PDF.js from its CDN.
 
-## Product boundary
+Read [AI_SETUP.md](AI_SETUP.md) for provider configuration, cost controls, local storage, limitations and verification details.
 
-Visual references and consented voice samples are collected for the future model pipeline but are not sent anywhere or applied by this static MVP. The product must not scrape anime episodes, clone performers' voices, or reuse commercial soundtracks without permission.
+## Verify
 
-See [PROJECT_HANDOFF.md](PROJECT_HANDOFF.md) for the implementation roadmap.
+```sh
+npm test
+```
+
+Tests need FFmpeg and FFprobe on PATH. Provider tests use stubs and never charge credits. The media test runs real FFmpeg.
+
+## Rights and privacy
+
+Use original, appropriately licensed or public-domain material. Keep source credits and licence notices in shared adaptations. API keys belong only in `.env`, never in the browser or repository. Pages remain in the browser for the local preview; AI analysis uploads them to the local server and Gemini, and video generation sends the selected crops to Runway. The server stores jobs in the Git-ignored `.mangamotion/` directory.
+
+This is a single-user local development server, not a public hosting deployment. No accounts, billing system, voice cloning or reference-video extraction is included.

@@ -1,0 +1,13 @@
+{
+  "name": "mangamotion",
+  "private": true,
+  "version": "0.2.0",
+  "engines": { "node": ">=22" },
+  "dependencies": { "sharp": "0.34.5" },
+  "type": "module",
+  "scripts": {
+    "dev": "node server.mjs",
+    "start": "node server.mjs",
+    "test": "node --test"
+  }
+}

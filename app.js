@@ -7,8 +7,8 @@ const fileTitle = $('#fileTitle');
 const fileMeta = $('#fileMeta');
 const replaceChapter = $('#replaceChapter');
 const visualRefs = $('#visualRefs');
-const voiceRefs = $('#voiceRefs');
 const musicRef = $('#musicRef');
+const sourceRightsCheck = $('#sourceRightsCheck');
 const rightsCheck = $('#rightsCheck');
 const analyzeButton = $('#analyzeButton');
 const formStatus = $('#formStatus');
@@ -18,6 +18,8 @@ const renderOutput = $('#renderOutput');
 const shotStrip = $('#shotStrip');
 const referenceSummary = $('#referenceSummary');
 const generateButton = $('#generateButton');
+const estimateButton = $('#estimateButton');
+const backendStatus = $('#backendStatus');
 const motionCanvas = $('#motionCanvas');
 const context = motionCanvas.getContext('2d');
 const canvasOverlay = $('#canvasOverlay');
@@ -43,6 +45,7 @@ let musicUrl = '';
 let audioContext = null;
 let audioSource = null;
 let audioDestination = null;
+let backendJob = null;
 
 const naturalSort = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
 
@@ -52,7 +55,7 @@ function formatBytes(bytes) {
 }
 
 function referenceFilesPresent() {
-  return visualRefs.files.length + voiceRefs.files.length + musicRef.files.length > 0;
+  return visualRefs.files.length + musicRef.files.length > 0;
 }
 
 function updateReferenceLabel(input) {
@@ -66,12 +69,14 @@ function updateReferenceLabel(input) {
 }
 
 function releaseFrames() {
+  document.dispatchEvent(new Event('chapter-cleared'));
   stopPlayback();
   ownedUrls.forEach(url => URL.revokeObjectURL(url));
   ownedUrls = [];
   sourceFrames = [];
   shotFrames = [];
   shotStrip.replaceChildren();
+  backendJob = null;
   analysisOutput.classList.add('hidden');
   renderOutput.classList.add('hidden');
   emptyOutput.classList.remove('hidden');
@@ -97,16 +102,17 @@ function setChapter(files) {
     return;
   }
   releaseFrames();
+  sourceRightsCheck.checked = false;
   chapterFiles = selected.sort((a, b) => naturalSort.compare(a.name, b.name));
   const totalBytes = chapterFiles.reduce((sum, file) => sum + file.size, 0);
   fileTitle.textContent = chapterFiles.length === 1 ? chapterFiles[0].name : `${chapterFiles.length} ordered page images`;
-  fileMeta.textContent = `${formatBytes(totalBytes)} · stays on this device`;
+  fileMeta.textContent = `${formatBytes(totalBytes)} · local until you approve AI analysis`;
   fileSummary.classList.remove('hidden');
   chapterDrop.classList.add('hidden');
   analyzeButton.disabled = false;
-  formStatus.textContent = referenceFilesPresent() && !rightsCheck.checked
-    ? 'Confirm your rights to the reference files before mapping.'
-    : 'Chapter ready to map.';
+  formStatus.textContent = sourceRightsCheck.checked
+    ? (referenceFilesPresent() && !rightsCheck.checked ? 'Confirm your rights to the reference files before mapping.' : 'Chapter ready to map.')
+    : 'Confirm you have rights to use this chapter before creating a shot plan.';
 }
 
 function loadPdfLibrary() {
@@ -207,15 +213,70 @@ function renderShotStrip() {
 function renderReferenceSummary() {
   const parts = [];
   if (visualRefs.files.length) parts.push(`${visualRefs.files.length} visual reference${visualRefs.files.length === 1 ? '' : 's'}`);
-  if (voiceRefs.files.length) parts.push(`${voiceRefs.files.length} consented voice sample${voiceRefs.files.length === 1 ? '' : 's'}`);
   if (musicRef.files.length) parts.push('1 music track');
   referenceSummary.textContent = parts.length
-    ? `Authorised reference pack staged: ${parts.join(' · ')}. Visual and voice references are reserved for the future generative backend${musicRef.files.length ? '; music can accompany the local preview' : ''}.`
+    ? `Reference pack: ${parts.join(' · ')}. Reference images guide AI appearance descriptions${musicRef.files.length ? '; music accompanies the local preview only' : ''}.`
     : 'No reference pack added. The motion cut will use only the uploaded chapter artwork.';
+}
+
+function chapterPayload(pageTotal) {
+  return {
+    rightsConfirmed: sourceRightsCheck.checked,
+    chapter: { name: chapterFiles.length === 1 ? chapterFiles[0].name : 'Ordered image chapter', pageCount: pageTotal },
+    settings: {
+      frame: $('#frameFormat').value,
+      duration: Number($('#targetLength').value),
+      motion: $('#motionStyle').value
+    }
+  };
+}
+
+async function createBackendJob(pageTotal) {
+  backendStatus.textContent = 'Creating a local backend job…';
+  try {
+    const response = await fetch('/api/jobs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(chapterPayload(pageTotal))
+    });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error || 'Backend job could not be created.');
+    backendJob = payload;
+    backendStatus.textContent = `Backend job planned. ${payload.analysis.message}`;
+  } catch (error) {
+    backendJob = null;
+    backendStatus.textContent = `Backend not running: local shot planning still works. Start it with “npm run dev” to create jobs and see AI estimates.`;
+  }
+}
+
+async function showAiEstimate() {
+  const pageTotal = Number($('#pageCount').textContent) || sourceFrames.length || 1;
+  estimateButton.disabled = true;
+  estimateButton.textContent = 'Calculating estimate…';
+  try {
+    const response = await fetch('/api/estimates', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ duration: Number($('#targetLength').value), shotCount: shotFrames.length || Math.min(pageTotal, 12), attempts: 1 })
+    });
+    const estimate = await response.json();
+    if (!response.ok) throw new Error(estimate.error || 'Estimate unavailable.');
+    backendStatus.textContent = `${estimate.provider} ${estimate.model}: about $${estimate.estimatedUsd.toFixed(2)} for one attempt. This is an estimate only—no request was sent and no charge was made.`;
+  } catch (error) {
+    backendStatus.textContent = 'Start the backend with “npm run dev” to calculate the local AI-video cost estimate. No paid request has been sent.';
+  } finally {
+    estimateButton.disabled = false;
+    estimateButton.textContent = 'See AI video estimate (no charge)';
+  }
 }
 
 async function analyzeChapter() {
   if (!chapterFiles.length) return;
+  if (!sourceRightsCheck.checked) {
+    formStatus.textContent = 'Confirm this chapter is original, public-domain, or licensed before creating a job.';
+    sourceRightsCheck.focus();
+    return;
+  }
   if (referenceFilesPresent() && !rightsCheck.checked) {
     formStatus.textContent = 'Confirm you have permission to use the reference files.';
     rightsCheck.focus();
@@ -243,6 +304,7 @@ async function analyzeChapter() {
     $('#analysisTitle').textContent = chapterFiles.length === 1 ? chapterFiles[0].name.replace(/\.pdf$/i, '') : 'Image chapter';
     renderShotStrip();
     renderReferenceSummary();
+    await createBackendJob(pageTotal);
     emptyOutput.classList.add('hidden');
     analysisOutput.classList.remove('hidden');
     formStatus.textContent = limited
@@ -254,7 +316,7 @@ async function analyzeChapter() {
     emptyOutput.classList.remove('hidden');
   } finally {
     analyzeButton.disabled = false;
-    analyzeButton.innerHTML = 'Map chapter into shots <span>→</span>';
+    analyzeButton.innerHTML = 'Create a local shot plan <span>→</span>';
   }
 }
 
@@ -383,7 +445,7 @@ function generatePreview() {
   renderOutput.classList.remove('hidden');
   $('#renderTitle').textContent = $('#analysisTitle').textContent;
   canvasOverlay.classList.remove('hidden');
-  renderStatus.textContent = 'Building the motion timeline…';
+  renderStatus.textContent = 'Building the camera-motion timeline…';
   drawFrame(0);
   window.setTimeout(() => {
     canvasOverlay.classList.add('hidden');
@@ -424,7 +486,7 @@ async function exportVideo() {
     downloadLink.href = url;
     downloadLink.download = `${($('#renderTitle').textContent || 'mangamotion').replace(/[^a-z0-9]+/gi, '-').toLowerCase()}-motion-cut.webm`;
     downloadLink.classList.remove('hidden');
-    exportStatus.textContent = `Video ready · ${formatBytes(blob.size)}`;
+    exportStatus.textContent = `Motion preview ready · ${formatBytes(blob.size)}`;
     exportButton.disabled = false;
   };
   recorder.start(1000);
@@ -443,7 +505,7 @@ chapterInput.addEventListener('change', () => setChapter(chapterInput.files));
   chapterDrop.classList.remove('dragging');
 }));
 chapterDrop.addEventListener('drop', event => setChapter(event.dataTransfer.files));
-[visualRefs, voiceRefs, musicRef].forEach(input => input.addEventListener('change', () => {
+[visualRefs, musicRef].forEach(input => input.addEventListener('change', () => {
   if (input === musicRef && musicAudio) {
     stopMusic();
     musicAudio = null;
@@ -460,8 +522,16 @@ chapterDrop.addEventListener('drop', event => setChapter(event.dataTransfer.file
 rightsCheck.addEventListener('change', () => {
   formStatus.textContent = rightsCheck.checked ? 'Reference permission confirmed.' : 'Confirm your rights to the reference files before mapping.';
 });
+sourceRightsCheck.addEventListener('change', () => {
+  if (sourceRightsCheck.checked) {
+    formStatus.textContent = 'Chapter permission confirmed. You can create a local shot plan.';
+  } else if (chapterFiles.length) {
+    formStatus.textContent = 'Confirm you have rights to use this chapter before creating a shot plan.';
+  }
+});
 analyzeButton.addEventListener('click', analyzeChapter);
 generateButton.addEventListener('click', generatePreview);
+estimateButton.addEventListener('click', showAiEstimate);
 playButton.addEventListener('click', () => startPlayback());
 restartButton.addEventListener('click', restartPreview);
 exportButton.addEventListener('click', exportVideo);
