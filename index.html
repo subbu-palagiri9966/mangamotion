@@ -3,116 +3,109 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="MangaMotion turns your comics into animated stories." />
-    <title>MangaMotion — Your comic, brought to life</title>
+    <meta name="description" content="Turn a manga chapter into a motion-first animated cut." />
+    <title>MangaMotion — Chapter to motion</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
     <header class="site-header">
-      <a class="brand" href="#top" aria-label="MangaMotion home"><span class="brand-mark">✦</span>MangaMotion</a>
-      <nav><a href="#how-it-works">How it works</a><a href="#features">Features</a><a href="#gallery">Examples</a></nav>
-      <button class="login" type="button">Log in</button>
+      <a class="brand" href="#top"><span>MM</span>MangaMotion</a>
+      <nav><a href="#studio">Studio</a><a href="#pipeline">How it works</a><a href="#rights">Reference rules</a></nav>
+      <a class="header-cta" href="#studio">Create a motion cut</a>
     </header>
-
     <main id="top">
       <section class="hero">
         <div class="hero-copy">
-          <p class="eyebrow"><span></span> AI animation studio for comic creators</p>
-          <h1>Your story deserves <em>motion.</em></h1>
-          <p class="hero-text">Upload your comic and turn it into a beautiful, voiced animated scene — while you stay in creative control.</p>
-          <div class="hero-actions"><button class="primary" id="startButton" type="button">Bring my comic to life <span>→</span></button><a class="watch-link" href="#how-it-works"><span class="play">▶</span> See how it works</a></div>
-          <div class="creator-proof"><div class="avatars"><span>✦</span><span>◉</span><span>☾</span></div><p>Made for <strong>independent creators</strong><br />and their original worlds.</p></div>
+          <p class="kicker"><i></i> Chapter-to-animation studio</p>
+          <h1>Don’t wait years.<br /><em>See the next chapter move.</em></h1>
+          <p class="hero-text">Upload a manga or comic chapter. MangaMotion maps its pages into shots and builds a watchable motion cut—without making you write dialogue or direct every panel.</p>
+          <div class="hero-actions"><a class="button primary" href="#studio">Upload a chapter <span>→</span></a><a class="plain-link" href="#pipeline">See the pipeline</a></div>
+          <div class="truth-row"><span>✓ PDF &amp; page images</span><span>✓ No dialogue forms</span><span>✓ Local private preview</span></div>
         </div>
-        <div class="scene-wrap" aria-label="Animated comic scene preview">
-          <div class="spark s1">✦</div><div class="spark s2">✦</div><div class="spark s3">·</div>
-          <div class="scene-card">
-            <div class="scene-top"><span class="live-dot"></span> SCENE PREVIEW <span>00:18</span></div>
-            <div class="sun"></div><div class="cloud c1"></div><div class="cloud c2"></div>
-            <div class="mountain m1"></div><div class="mountain m2"></div><div class="hill"></div>
-            <div class="character"><div class="hair"></div><div class="face"><i></i><i></i></div><div class="body"></div></div>
-            <div class="speech">We can do this!<small>AI voice · hopeful</small></div>
-            <div class="timeline"><div class="track"><b></b></div><span>◀</span><span class="pause">Ⅱ</span><span>▶</span></div>
+        <div class="hero-visual" aria-hidden="true">
+          <div class="page page-back"><b>07</b><i></i><i></i><i></i></div>
+          <div class="page page-front"><span>CHAPTER 1089</span><div class="ink-face"></div><div class="speed-lines"></div></div>
+          <div class="play-orb">▶</div>
+          <div class="motion-label"><small>GENERATING</small><b>Panel → Shot 06</b><i><span></span></i></div>
+        </div>
+      </section>
+      <section class="studio" id="studio">
+        <div class="section-intro">
+          <p class="kicker"><i></i> MangaMotion Studio</p>
+          <h2>One chapter in. One motion cut out.</h2>
+          <p>The browser MVP creates real camera motion from your pages. A generative animation backend can later replace each motion shot without changing this workflow.</p>
+        </div>
+        <div class="studio-grid">
+          <div class="setup-column">
+            <section class="studio-card source-card">
+              <div class="card-heading"><span class="step-number">01</span><div><h3>Upload the chapter</h3><p>One PDF, or multiple PNG/JPG/WebP pages in reading order.</p></div></div>
+              <input id="chapterInput" type="file" accept="application/pdf,image/png,image/jpeg,image/webp" multiple hidden />
+              <button class="drop-zone" id="chapterDrop" type="button"><span class="upload-mark">↑</span><b>Drop a chapter here</b><small>or choose files · up to 150 MB each</small></button>
+              <div class="file-summary hidden" id="fileSummary"><div><b id="fileTitle"></b><small id="fileMeta"></small></div><button id="replaceChapter" type="button">Replace</button></div>
+            </section>
+            <section class="studio-card reference-card">
+              <div class="card-heading"><span class="step-number">02</span><div><h3>Series reference pack <mark>Optional</mark></h3><p>Use only material you created, licensed, or have permission to use.</p></div></div>
+              <div class="reference-grid">
+                <label><span>Character look</span><small>Images or authorised clips</small><input id="visualRefs" type="file" accept="image/*,video/*" multiple /></label>
+                <label><span>Voice identity</span><small>Consented voice samples</small><input id="voiceRefs" type="file" accept="audio/*" multiple /></label>
+                <label><span>Music</span><small>Your owned/licensed track</small><input id="musicRef" type="file" accept="audio/*" /></label>
+              </div>
+              <label class="rights-check"><input id="rightsCheck" type="checkbox" /><span>I confirm I have permission to use every reference file I added.</span></label>
+            </section>
+            <section class="studio-card settings-card">
+              <div class="card-heading"><span class="step-number">03</span><div><h3>Motion settings</h3><p>Only the controls that change the final video.</p></div></div>
+              <div class="settings-grid">
+                <label>Frame<select id="frameFormat"><option value="16:9">Landscape · 16:9</option><option value="9:16">Vertical · 9:16</option><option value="1:1">Square · 1:1</option></select></label>
+                <label>Length<select id="targetLength"><option value="15">15 seconds</option><option value="30" selected>30 seconds</option><option value="60">60 seconds</option></select></label>
+                <label>Motion<select id="motionStyle"><option value="cinematic">Cinematic</option><option value="energetic">Energetic</option><option value="gentle">Gentle</option></select></label>
+              </div>
+              <button class="button primary wide" id="analyzeButton" type="button" disabled>Map chapter into shots <span>→</span></button>
+              <p class="form-status" id="formStatus" aria-live="polite">Add a chapter to begin.</p>
+            </section>
           </div>
-          <div class="mini-card"><span class="mini-icon">✧</span><div><b>Emotion detected</b><small>Hopeful · determined</small></div></div>
+          <aside class="output-column">
+            <section class="output-card empty-output" id="emptyOutput">
+              <div class="empty-glyph">✦</div><h3>Your motion cut will appear here</h3><p>Pages are processed on this device in the current MVP.</p>
+              <ol><li><span></span>Read chapter pages</li><li><span></span>Build motion shots</li><li><span></span>Render video</li></ol>
+            </section>
+            <section class="output-card analysis-output hidden" id="analysisOutput" aria-live="polite">
+              <div class="output-heading"><div><small>CHAPTER MAP</small><h3 id="analysisTitle">Ready to animate</h3></div><span class="status-pill">Local MVP</span></div>
+              <div class="stat-grid"><div><b id="pageCount">0</b><span>pages</span></div><div><b id="shotCount">0</b><span>shots</span></div><div><b id="runTime">0s</b><span>runtime</span></div></div>
+              <div class="shot-strip" id="shotStrip"></div>
+              <div class="reference-summary" id="referenceSummary"></div>
+              <button class="button primary wide" id="generateButton" type="button">Generate motion cut <span>▶</span></button>
+              <p class="output-note">This version animates the uploaded artwork with framing, camera motion and transitions. It does not invent new character movement yet.</p>
+            </section>
+            <section class="output-card render-output hidden" id="renderOutput">
+              <div class="output-heading"><div><small>MOTION CUT</small><h3 id="renderTitle">Chapter preview</h3></div><span class="status-pill ready">Ready</span></div>
+              <div class="canvas-wrap"><canvas id="motionCanvas" width="1280" height="720"></canvas><div class="canvas-overlay" id="canvasOverlay"><span id="renderStatus">Preparing frames…</span></div></div>
+              <div class="player-controls"><button id="playButton" type="button">▶ Play</button><button id="restartButton" type="button">↺ Restart</button><span id="timeReadout">00:00 / 00:30</span></div>
+              <div class="render-progress"><i id="renderProgress"></i></div>
+              <button class="button export wide" id="exportButton" type="button">Export WebM video</button>
+              <a class="download-link hidden" id="downloadLink">Download finished motion cut</a>
+              <p class="form-status" id="exportStatus" aria-live="polite"></p>
+            </section>
+          </aside>
         </div>
       </section>
-
-      <section class="upload-section" id="upload">
-        <div class="section-heading"><p class="eyebrow"><span></span> Start your first scene</p><h2>From panels to a living story.</h2><p>Drop in your original comic page. We’ll help you transform it, one scene at a time.</p></div>
-        <div class="upload-card" id="dropZone">
-          <input id="fileInput" type="file" accept="image/*,.pdf" hidden />
-          <div class="upload-icon">↑</div><h3>Drop your comic page here</h3><p>PNG, JPG, or PDF · up to 25 MB</p><button class="secondary" id="browseButton" type="button">Choose a file</button>
+      <section class="pipeline" id="pipeline">
+        <div class="section-intro left"><p class="kicker"><i></i> The full vision</p><h2>From chapter understanding to generated anime.</h2></div>
+        <div class="pipeline-grid">
+          <article class="active"><span>NOW</span><b>Chapter ingestion</b><p>PDF/page upload, ordering, preview and real motion-video export.</p></article>
+          <article><span>NEXT</span><b>Story &amp; character map</b><p>Panel detection, character identity, action and scene continuity.</p></article>
+          <article><span>THEN</span><b>Generative shots</b><p>Consistent character animation guided by authorised references.</p></article>
+          <article><span>FINAL</span><b>Episode assembly</b><p>Shot continuity, consented voices, licensed music and final render.</p></article>
         </div>
-        <section class="file-preview hidden" id="filePreview" aria-live="polite">
-          <div class="preview-heading"><div><p class="eyebrow"><span></span> Your source material</p><h3 id="previewTitle">Comic preview</h3></div><span class="preview-badge" id="previewKind">Preview</span></div>
-          <div class="preview-surface"><img id="imagePreview" class="hidden" alt="Selected comic preview" /><iframe id="pdfPreview" class="hidden" title="Selected comic PDF preview"></iframe></div>
-          <p class="preview-note" id="previewMeta">Previewing locally — your file stays on this device.</p>
-          <div class="ocr-card hidden" id="ocrCard" aria-live="polite">
-            <div class="ocr-copy"><b id="ocrTitle">Read dialogue from this image</b><p id="ocrStatus">Use free browser-based OCR to find text. You can review it before saving.</p></div>
-            <div class="pdf-page-picker hidden" id="pdfPagePicker">
-              <label for="pdfPageNumber">Comic page to read</label>
-              <div class="pdf-page-controls"><input id="pdfPageNumber" type="number" min="1" value="4" inputmode="numeric" /><button class="text-button" id="showPdfPageButton" type="button">Show page</button></div>
-              <small id="pdfPageHint">Choose a comic page, not the cover or credits.</small>
-            </div>
-            <button class="secondary" id="ocrButton" type="button">Extract text</button>
-          </div>
-        </section>
-        <div class="processing hidden" id="processing" aria-live="polite">
-          <div class="loader-orbit"><i></i></div>
-          <div class="processing-copy"><div class="processing-title"><b>Reading your story…</b><span id="progressNumber">1 / 3</span></div><p id="loadingText">Finding comic panels and dialogue</p><div class="progress-line"><i id="progressBar"></i></div></div>
-        </div>
-        <div class="ready-card hidden" id="readyCard" aria-live="polite"><span class="ready-icon">✦</span><div><b>Your scene plan is ready</b><p id="readyText">We found the first moments worth animating.</p></div><button class="text-button" id="openPlanButton" type="button">Open plan</button><button class="text-button" id="tryAgainButton" type="button">Try another</button></div>
-        <section class="scene-plan hidden" id="scenePlan" aria-live="polite">
-          <div class="plan-top"><div><p class="eyebrow"><span></span> Demo scene plan</p><h2>Your first story beat.</h2><p id="planSource">Built from your selected comic file.</p></div><span class="demo-badge">Demo analysis</span></div>
-          <div class="plan-grid">
-            <article class="story-card scene-summary"><span class="card-label" id="sceneTiming">Scene 01 · 00:00–00:12</span><h3 id="sceneTitle">The opening moment</h3><p id="sceneDescription">A character enters a quiet space, pauses to take in the setting, and the scene builds anticipation for what comes next.</p><div class="tag-row" id="sceneTags"><span>Reflective</span><span>Gentle pace</span><span>Wide shot</span></div></article>
-            <article class="story-card"><span class="card-label">Characters</span><div class="character-row"><span class="character-orb">A</span><div><b>Lead character</b><p>Thoughtful · observant</p></div></div><div class="character-row"><span class="character-orb alt">B</span><div><b>Supporting voice</b><p>Warm · reassuring</p></div></div></article>
-            <article class="story-card dialogue-card"><span class="card-label">Dialogue direction</span><p class="quote" id="dialogueQuote">“Add the dialogue from your original panel here.”</p><p id="dialogueMeta">Use the image text reader or write a line manually in the scene editor.</p></article>
-          </div>
-          <div class="panel-strip"><div class="panel-strip-head"><div><span class="card-label">Suggested panel sequence</span><h3>Choose the moments to animate</h3></div><div class="plan-actions"><button class="secondary" id="openEditorButton" type="button">Edit scene</button><button class="primary preview-button" id="openPreviewButton" type="button">Preview scene</button></div></div><div class="panel-options"><article><span>01</span><b>Establishing shot</b><small>2.5 sec · slow push-in</small></article><article><span>02</span><b>Character reaction</b><small>3 sec · gentle motion</small></article><article><span>03</span><b>Dialogue beat</b><small>4 sec · voice cue</small></article></div></div>
-          <section class="animation-player hidden" id="animationPlayer" aria-live="polite">
-            <div class="player-heading"><div><span class="card-label">Local animation preview</span><h3 id="playerTitle">Your scene in motion</h3><p id="playerDetails">A simple motion study based on your scene settings.</p></div><button class="text-button" id="closePreviewButton" type="button">Close</button></div>
-            <div class="player-stage" id="playerStage"><img id="animationImage" class="hidden" alt="Selected comic image animated with a camera-style movement" /><div class="storyboard-poster" id="storyboardPoster"><span>✦</span><b id="posterPanel">Establishing shot</b><p>PDF storyboard preview</p></div><div class="player-overlay"><span id="playerMood">Reflective</span><b id="playerTime">00:00 / 00:12</b></div></div>
-            <div class="player-controls"><button class="primary" id="playPreviewButton" type="button">Play preview</button><button class="text-button" id="restartPreviewButton" type="button">Restart</button><div class="preview-progress" aria-label="Preview progress"><i id="previewProgress"></i></div></div>
-            <p class="player-note">This is a browser-only motion mockup. It does not generate or export a video yet.</p>
-          </section>
-          <form class="scene-editor hidden" id="sceneEditor">
-            <div class="editor-heading"><div><span class="card-label">Scene editor</span><h3>Make this first beat yours.</h3><p>These controls update the demo plan only. No file or text is sent anywhere.</p></div><button class="text-button" id="closeEditorButton" type="button">Close</button></div>
-            <div class="editor-grid">
-              <label class="editor-field">Scene title<input id="editorTitle" type="text" maxlength="70" value="The opening moment" /></label>
-              <label class="editor-field editor-field-wide">Scene direction<textarea id="editorDescription" rows="3" maxlength="240">A character enters a quiet space, pauses to take in the setting, and the scene builds anticipation for what comes next.</textarea></label>
-              <label class="editor-field">Mood<select id="editorMood"><option>Reflective</option><option>Hopeful</option><option>Energetic</option><option>Tense</option></select></label>
-              <label class="editor-field">Camera<select id="editorCamera"><option>Wide shot</option><option>Slow push-in</option><option>Close-up</option><option>Tracking shot</option></select></label>
-              <label class="editor-field">Voice direction<select id="editorVoice"><option>Warm &amp; reassuring</option><option>Bright &amp; energetic</option><option>Calm narration</option><option>Quiet and intimate</option></select></label>
-              <label class="editor-field">Length (seconds)<input id="editorDuration" type="number" min="1" max="60" value="12" /></label>
-            </div>
-            <fieldset class="dialogue-editor"><legend>Dialogue editor</legend><div class="editor-grid"><label class="editor-field">Speaker<input id="editorSpeaker" type="text" maxlength="40" value="Lead character" /></label><label class="editor-field">Delivery<select id="editorDelivery"><option>Natural</option><option>Warm &amp; reassuring</option><option>Bright &amp; energetic</option><option>Quiet and intimate</option><option>Urgent</option></select></label><label class="editor-field editor-field-wide">Dialogue line<textarea id="editorDialogue" rows="3" maxlength="180" placeholder="Use Extract text above, or write the line this character says…"></textarea></label></div><p class="dialogue-hint">Detected text is a suggestion—review and correct it before saving. It stays in this browser with your scene draft.</p></fieldset>
-            <fieldset class="panel-picker"><legend>Focus panel</legend><div class="panel-choice-row"><button class="panel-choice" type="button" data-panel="Establishing shot" aria-pressed="true">01 <span>Establishing shot</span></button><button class="panel-choice" type="button" data-panel="Character reaction" aria-pressed="false">02 <span>Character reaction</span></button><button class="panel-choice" type="button" data-panel="Dialogue beat" aria-pressed="false">03 <span>Dialogue beat</span></button></div></fieldset>
-            <div class="editor-actions"><p id="draftStatus" aria-live="polite">Changes are saved only when you choose Save scene draft.</p><div class="editor-button-row"><button class="secondary" id="saveProjectButton" type="button">Save to library</button><button class="primary" type="submit">Save scene draft</button></div></div>
-          </form>
-        </section>
       </section>
-
-      <section class="project-library" id="projectLibrary">
-        <div class="library-heading"><div><p class="eyebrow"><span></span> Your project shelf</p><h2>Keep your best story beats close.</h2><p>Saved scene settings stay only in this browser. Your uploaded image or PDF is never copied into the library.</p></div><span class="library-count" id="libraryCount">0 projects</span></div>
-        <div class="project-grid" id="projectGrid"></div>
-        <div class="library-empty" id="libraryEmpty"><span>✦</span><div><b>No saved projects yet</b><p>Edit a scene, then choose “Save to library” to keep its title, direction, and creative settings.</p></div></div>
+      <section class="rights" id="rights">
+        <div><p class="kicker light"><i></i> Built for legitimate creation</p><h2>Reference the series.<br />Don’t steal the series.</h2></div>
+        <div class="rights-copy"><p>MangaMotion should support original, public-domain and licensed comics. Existing anime clips, actor voices and soundtracks cannot be copied into a public generator without the rights holders’ and performers’ permission.</p><p>That is why the product accepts an explicit authorised reference pack instead of scraping released episodes.</p></div>
       </section>
-
-      <section class="steps" id="how-it-works">
-        <div class="section-heading"><p class="eyebrow"><span></span> Your creative process</p><h2>Simple for you. Magical for your readers.</h2></div>
-        <div class="step-grid"><article><span class="number">01</span><div class="step-icon">▧</div><h3>Upload your comic</h3><p>Start with an original page, chapter, or storyboard.</p></article><article><span class="number">02</span><div class="step-icon">✦</div><h3>Shape the scene</h3><p>Choose voices, mood, timing, and the movement you imagine.</p></article><article><span class="number">03</span><div class="step-icon">▶</div><h3>Watch it come alive</h3><p>Preview, fine-tune, then share your animated story.</p></article></div>
-      </section>
-
-      <section class="feature-section" id="features"><div class="feature-visual"><div class="panel panel-one"><span>Panel 01</span><b>“Don’t leave me behind.”</b></div><div class="panel panel-two"><span>Panel 02</span><b>Voice · Emotion · Motion</b></div><div class="connection">✦</div></div><div><p class="eyebrow"><span></span> Made to support your vision</p><h2>You direct.<br />AI helps animate.</h2><p class="feature-copy">MangaMotion takes care of the time-consuming parts, but every important creative choice stays with you.</p><ul><li><span>✓</span> Original, customisable AI voices</li><li><span>✓</span> Scene-by-scene creative controls</li><li><span>✓</span> Character consistency across your story</li></ul></div></section>
-
-      <section class="gallery" id="gallery"><div class="section-heading"><p class="eyebrow"><span></span> Made for every kind of story</p><h2>Your world. Your style.</h2></div><div class="gallery-grid"><div class="gallery-card card-purple"><span>Fantasy adventure</span><b>Moonlit quests</b></div><div class="gallery-card card-orange"><span>Slice of life</span><b>Small, bright moments</b></div><div class="gallery-card card-blue"><span>Sci-fi</span><b>Beyond the stars</b></div></div></section>
     </main>
-    <footer><a class="brand" href="#top"><span class="brand-mark">✦</span>MangaMotion</a><p>For the stories only you can tell.</p><span>© 2026 MangaMotion</span></footer>
-    <script src="app.js?v=ocr-page-selection-1"></script>
+    <footer><a class="brand" href="#top"><span>MM</span>MangaMotion</a><p>Chapter to motion · Built for authorised stories</p><span>© 2026</span></footer>
+    <script src="app.js?v=chapter-motion-1"></script>
   </body>
 </html>
